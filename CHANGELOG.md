@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## Unreleased
 
+### Fixed
+
+- `scripts/install.ps1`: wrap `Get-ChildItem` result in `@()` so `.Count` resolves correctly when only one skill directory is present (Set-StrictMode -Version Latest forbids `.Count` on scalars)
+
 ### Added
 
 - `shruggie-html`: build a single self-contained HTML file using the official ShruggieTech parent-brand identity (immutable color tokens, CDN-wired Space Grotesk and Geist typography, dark-mode-first layout, voice rules, exact tagline)

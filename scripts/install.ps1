@@ -46,9 +46,12 @@ if (-not (Test-Path -LiteralPath $SkillsDst)) {
     New-Item -ItemType Directory -Force -Path $SkillsDst | Out-Null
 }
 
-$skillDirs = Get-ChildItem -LiteralPath $SkillsSrc -Directory -ErrorAction SilentlyContinue
+# Wrap in @() so .Count is always available. Get-ChildItem returns a single
+# DirectoryInfo (not an array) when only one directory matches, and accessing
+# .Count on a scalar throws under Set-StrictMode -Version Latest.
+$skillDirs = @(Get-ChildItem -LiteralPath $SkillsSrc -Directory -ErrorAction SilentlyContinue)
 
-if (-not $skillDirs -or $skillDirs.Count -eq 0) {
+if ($skillDirs.Count -eq 0) {
     Write-Host "No skills found in $SkillsSrc"
     exit 0
 }
