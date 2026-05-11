@@ -1,18 +1,34 @@
-# This .gitignore is appropriate for repositories deployed to GitHub Pages and using
-# a Gemfile as specified at https://github.com/github/pages-gem#conventional
+# OS detritus
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
 
-# Basic Jekyll gitignores (synchronize to Jekyll.gitignore)
-_site/
-.sass-cache/
-.jekyll-cache/
-.jekyll-metadata
+# Editor and IDE local state
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Additional Ruby/bundler ignore for when you run: bundle install
-/vendor
+# Logs and temp files
+*.log
+*.tmp
 
-# Specific ignore for GitHub Pages
-# GitHub Pages will always use its own deployed version of pages-gem
-# This means GitHub Pages will NOT use your Gemfile.lock and therefore it is
-# counterproductive to check this file into the repository.
-# Details at https://github.com/github/pages-gem/issues/768
-Gemfile.lock
+# Local environment files (in case anyone drops one for testing)
+.env
+.env.local
+.env.*.local
+
+# Python bytecode (if scripts/ grows to include Python helpers)
+__pycache__/
+*.pyc
+*.pyo
+
+# Node detritus (in case any skill ships JS tooling)
+node_modules/
+
+# Build or distribution output (none expected at repo root, but cheap insurance)
+dist/
+build/
