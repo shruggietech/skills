@@ -6,7 +6,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Maintained](https://img.shields.io/badge/Maintained-yes-success.svg)](#status)
 
-A curated collection of [Claude Code Skills](https://code.claude.com/docs/en/skills) used by ShruggieTech across client engagements, internal tooling, and ResoNova consulting work. Skills here encode consistent output formats, workflow automation, and house-style conventions so the same standards apply whether Claude Code is running on a Proxmox host, a personal workstation, or a collaborator's laptop.
+A curated collection of [Claude Code Skills](https://code.claude.com/docs/en/skills) used by ShruggieTech across client engagements, internal tooling, and consulting work. Skills here encode consistent output formats, workflow automation, and house-style conventions so the same standards apply whether Claude Code is running on a Proxmox host, a personal workstation, or a collaborator's laptop.
 
 Skills are modular folders containing a `SKILL.md` instruction file plus optional supporting assets. Claude Code loads them either automatically (when a user request matches the skill's description) or explicitly via `/skill-name`. See the [official skills documentation](https://code.claude.com/docs/en/skills) for the full model.
 
