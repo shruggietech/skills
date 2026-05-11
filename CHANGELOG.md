@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `shruggie-html`: build a single self-contained HTML file using the official ShruggieTech parent-brand identity (immutable color tokens, CDN-wired Space Grotesk and Geist typography, dark-mode-first layout, voice rules, exact tagline)
 - Initial repository scaffolding
 - `README.md` covering purpose, installation (Linux, macOS, Windows 11), conventions summary, and references
 - `CONVENTIONS.md` with house-style rules for every skill (encoding, frontmatter, body discipline, prose constraints, invocation control)
