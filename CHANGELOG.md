@@ -8,11 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- `shruggie-html`: section-surface tokens (`--color-section-services`, `--color-section-work`, `--color-section-research`, `--color-section-cta`) and the `.card-glass` rule were missing from the `[data-theme="dark"]` block in `assets/brand.css`, so a light-system-preference browser opening a `data-theme="dark"` page rendered white text on light gray section surfaces; the dark attribute now fully pins those surfaces regardless of system preference
+- `shruggie-html`: removed the broken `https://cdn.shruggie.tech/brand/logo/logo-icon-green.png` reference from `SKILL.md` and `assets/brand-rules.md` (the CDN URL returned 404)
+- `shruggie-html`: logos and favicons in generated HTML failed to render in sandboxed environments (Claude chat artifacts, email clients, offline opens) because they loaded from the brand CDN; they now embed as inline base64 `data:` URIs so generated pages are fully self-contained
 - `scripts/install.ps1`: wrap `Get-ChildItem` result in `@()` so `.Count` resolves correctly when only one skill directory is present (Set-StrictMode -Version Latest forbids `.Count` on scalars)
 
 ### Added
 
+- `shruggie-html`: `assets/brand/` directory with byte-identical local copies of the 3 brand logos and 7 favicon files mirrored from the brand CDN, plus `assets/inline-assets.md` with pre-computed base64 `data:` URIs keyed by placeholder token for the build step to paste into generated HTML
 - `shruggie-html`: build a single self-contained HTML file using the official ShruggieTech parent-brand identity (immutable color tokens, CDN-wired Space Grotesk and Geist typography, dark-mode-first layout, voice rules, exact tagline)
+
+### Changed
+
+- `shruggie-html`: `assets/page-template.html` now uses `{{LOGO_DARKBG_DATA_URI}}`, `{{OG_IMAGE_DATA_URI}}`, and `{{FAVICON_*_DATA_URI}}` placeholders for every logo, favicon, and social-share image; the build step substitutes them from `assets/inline-assets.md`, so generated HTML contains no `cdn.shruggie.tech/brand/(logo|favicon)/` URLs. The typography stylesheet at `https://cdn.shruggie.tech/brand/typography.css` is the one remaining remote dependency (the brand CSS has system-font fallback stacks if it fails to load)
 - Initial repository scaffolding
 - `README.md` covering purpose, installation (Linux, macOS, Windows 11), conventions summary, and references
 - `CONVENTIONS.md` with house-style rules for every skill (encoding, frontmatter, body discipline, prose constraints, invocation control)
