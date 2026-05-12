@@ -107,7 +107,10 @@
   }
 }
 
-/* Forced dark theme via attribute (overrides system preference). */
+/* Forced dark theme via attribute (overrides system preference).
+   Must redefine every token the light @media block overrides; otherwise a
+   light-system-pref browser opening a data-theme="dark" page picks up the
+   light section surfaces and produces white-on-light-gray text. */
 [data-theme="dark"] {
   --bg-page: var(--color-black);
   --bg-elevated: var(--color-gray-950);
@@ -118,6 +121,17 @@
   --text-accent: var(--color-green-bright);
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
+  --color-section-services: var(--color-gray-950);
+  --color-section-work: var(--color-gray-900);
+  --color-section-research: var(--color-gray-800);
+  --color-section-cta: #060608;
+}
+
+/* card-glass needs the same attribute-scoped counter-override; the light
+   @media rule (further down) otherwise wins on a light-pref system. */
+[data-theme="dark"] .card-glass {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* --------------------------------------------------------------------------
