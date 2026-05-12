@@ -46,18 +46,19 @@ Do not paraphrase. When rendering, mark the emoticon `aria-hidden="true"` and co
 
 ## Logo URLs (CDN)
 
-Pull logo assets from the CDN by URL. Never hand-construct a logo URL or substitute a different file.
+These CDN URLs are the source of truth. Generated HTML never embeds them as `<img src>`; instead, the skill substitutes inline base64 data URIs from `inline-assets.md` so output is fully self-contained. The URLs below exist so the bundled assets stay traceable to their canonical origin.
 
 | Variant | URL | Use when |
 |---|---|---|
 | Dark background | `https://cdn.shruggie.tech/brand/logo/logo-darkbg.png` | Dark or black container backgrounds |
 | Light background | `https://cdn.shruggie.tech/brand/logo/logo-lightbg.png` | White or near-white container backgrounds |
-| Mark only (green) | `https://cdn.shruggie.tech/brand/logo/logo-icon-green.png` | Standalone mark without wordmark |
 | Social share | `https://cdn.shruggie.tech/brand/logo/github-social-share.png` | OG image, Twitter card image |
 
 The kawaii character may not be used where the platform requires authentic photography (Google Business Profile is the canonical example). On those surfaces, use real photographs of people and work, never the illustrated mark.
 
 ## Favicon URLs (CDN)
+
+Same source-of-truth rule as the logo URLs above: generated HTML embeds these as inline base64 from `inline-assets.md`; the CDN URLs document the canonical origin of the bundled bytes.
 
 | Asset | URL |
 |---|---|

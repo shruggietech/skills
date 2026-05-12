@@ -1,4 +1,10 @@
 <!doctype html>
+<!--
+  All {{*_DATA_URI}} placeholders below are filled at build time from
+  assets/inline-assets.md so generated pages embed every logo and favicon
+  as a base64 data URI. The only remote dependency is the typography
+  stylesheet imported inside the <style> block.
+-->
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
@@ -14,18 +20,18 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="{{PAGE_TITLE}}">
   <meta property="og:description" content="{{PAGE_DESCRIPTION}}">
-  <meta property="og:image" content="https://cdn.shruggie.tech/brand/logo/github-social-share.png">
+  <meta property="og:image" content="{{OG_IMAGE_DATA_URI}}">
 
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{PAGE_TITLE}}">
   <meta name="twitter:description" content="{{PAGE_DESCRIPTION}}">
-  <meta name="twitter:image" content="https://cdn.shruggie.tech/brand/logo/github-social-share.png">
+  <meta name="twitter:image" content="{{OG_IMAGE_DATA_URI}}">
 
-  <!-- Favicons (CDN sourced) -->
-  <link rel="icon" href="https://cdn.shruggie.tech/brand/favicon/icon.ico" sizes="any">
-  <link rel="icon" type="image/png" sizes="192x192" href="https://cdn.shruggie.tech/brand/favicon/icon-192.png">
-  <link rel="apple-touch-icon" sizes="256x256" href="https://cdn.shruggie.tech/brand/favicon/icon-256.png">
+  <!-- Favicons (inline base64; see assets/inline-assets.md) -->
+  <link rel="icon" href="{{FAVICON_ICO_DATA_URI}}" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{FAVICON_192_DATA_URI}}">
+  <link rel="apple-touch-icon" sizes="256x256" href="{{FAVICON_256_DATA_URI}}">
 
   <style>
     /* Inline the contents of assets/brand.css here. */
@@ -36,7 +42,7 @@
   <header class="site-header">
     <div class="container">
       <a href="/" class="logo" aria-label="ShruggieTech">
-        <img src="https://cdn.shruggie.tech/brand/logo/logo-darkbg.png" alt="ShruggieTech">
+        <img src="{{LOGO_DARKBG_DATA_URI}}" alt="ShruggieTech">
       </a>
       <nav aria-label="Primary">
         <a href="#section-1">Section</a>

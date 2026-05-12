@@ -6,7 +6,7 @@ disable-model-invocation: false
 
 # Shruggie HTML
 
-Produce a single self-contained `.html` file that conforms to the ShruggieTech parent-brand identity. The skill bundles the brand color tokens, typography wiring, section primitives, and voice rules so Claude can emit on-brand HTML without re-deriving any of them per task. The default deliverable shape is one `.html` file with all CSS inlined inside a single `<style>` block; fonts and images load from the ShruggieTech CDN so the file survives email, CMS, and PDF pipelines without breaking.
+Produce a single self-contained `.html` file that conforms to the ShruggieTech parent-brand identity. The skill bundles the brand color tokens, typography wiring, section primitives, voice rules, and the raw logo and favicon bytes so Claude can emit on-brand HTML without re-deriving any of them per task. The default deliverable shape is one `.html` file with all CSS inlined inside a single `<style>` block and every logo and favicon embedded as a base64 `data:` URI; only the typography stylesheet loads from the ShruggieTech CDN, so the file renders correctly in Claude chat artifacts, email clients, offline opens, and other sandboxed environments where the CDN may be unreachable.
 
 ## When to Use
 
@@ -27,7 +27,7 @@ Do not invoke this skill for:
 
 ## Instructions
 
-The skill's deliverable is always **a single self-contained `.html` file** unless the user explicitly asks for a multi-file structure. The whole stylesheet is inlined inside one `<style>` block in `<head>`; the only external references are the brand CDN URLs (typography stylesheet, logo, favicon, OG image).
+The skill's deliverable is always **a single self-contained `.html` file** unless the user explicitly asks for a multi-file structure. The whole stylesheet is inlined inside one `<style>` block in `<head>`; every logo and favicon is embedded as an inline base64 `data:` URI from `assets/inline-assets.md`. The only remote dependency in the generated output is the typography stylesheet at `https://cdn.shruggie.tech/brand/typography.css`, imported at the top of the inlined `<style>` block (the brand CSS has system-font fallback stacks if the import fails).
 
 ### Brand fidelity
 
@@ -49,20 +49,22 @@ The page renders dark by default: `<html lang="en" data-theme="dark">` plus `<me
 
 Every page has:
 
-- A `site-header` with the dark-bg logo (`https://cdn.shruggie.tech/brand/logo/logo-darkbg.png`) and primary nav. If the page renders light-default, swap to the light-bg logo.
+- A `site-header` with the dark-bg logo and primary nav. The logo `<img>` uses an inline `data:image/png;base64,...` URI sourced from `assets/inline-assets.md` (token `{{LOGO_DARKBG_DATA_URI}}`). If the page renders light-default, swap to `{{LOGO_LIGHTBG_DATA_URI}}`.
 - A `<main>` composed of one hero plus zero or more sections from `assets/sections.md`.
 - A `site-footer` with the `By ShruggieTech` attribution and the tagline component. The tagline string is exact: `¯\_(ツ)_/¯ We'll figure it out.` Never paraphrase. Mark the emoticon `aria-hidden="true"` and color it with `var(--text-accent)`; the rest of the tagline renders muted.
-- Favicon link tags pointing at the CDN `.ico` and at least one PNG size for the apple-touch-icon slot. URLs come from `assets/brand-rules.md`; never hand-construct a CDN URL.
+- Favicon link tags using inline base64 data URIs for the primary `.ico` and at least one PNG size (192px or 256px). Tokens are listed in `assets/inline-assets.md`; never substitute a remote URL.
 
-### Logo URLs
+### Logo and social-share assets
 
-Pull logo images by URL from the CDN. Never substitute a hand-made or off-CDN URL. The full list lives in `assets/brand-rules.md`. The three you will use most often:
+Every logo and OG image in generated HTML is an inline base64 `data:` URI sourced from `assets/inline-assets.md`. The CDN URLs in `assets/brand-rules.md` are the canonical source of truth for the bundled bytes, but they never appear in the output (no `<img src="https://cdn.shruggie.tech/brand/logo/...">` and no `<meta property="og:image" content="https://cdn...">`).
 
-- Dark surfaces (default): `https://cdn.shruggie.tech/brand/logo/logo-darkbg.png`
-- Light surfaces: `https://cdn.shruggie.tech/brand/logo/logo-lightbg.png`
-- Mark only (no wordmark): `https://cdn.shruggie.tech/brand/logo/logo-icon-green.png`
+The three logo tokens you will use most often:
 
-The OG image and Twitter card image both point at `https://cdn.shruggie.tech/brand/logo/github-social-share.png` unless the user supplies a custom social image.
+- Dark surfaces (default): `{{LOGO_DARKBG_DATA_URI}}`
+- Light surfaces: `{{LOGO_LIGHTBG_DATA_URI}}`
+- Social share (OG image, Twitter card): `{{OG_IMAGE_DATA_URI}}`
+
+If the user supplies a custom social image, replace the OG image data URI with their asset (preferably as a data URI too, so the page stays self-contained).
 
 ### Voice and copy
 
@@ -96,13 +98,14 @@ Every file the skill writes complies with the repo CONVENTIONS:
 
 When the user has confirmed scope and you are ready to emit the file:
 
-1. Read `assets/brand.css` and `assets/page-template.html`.
+1. Read `assets/brand.css`, `assets/page-template.html`, and `assets/inline-assets.md`.
 2. Confirm the deliverable type (landing page, one-pager, internal report) and pick the section primitives you will need.
 3. Read `assets/sections.md` and copy the fragments you need into the template's `<main>` in order.
 4. Inline the full contents of `assets/brand.css` into the template's `<style>` block, replacing the placeholder comment. Keep the `@import` line as the first statement inside the block.
-5. Replace template placeholders (`{{PAGE_TITLE}}`, `{{PAGE_DESCRIPTION}}`, `{{HEADLINE}}`, `{{LEDE}}`, `{{CTA_LABEL}}`, `{{EYEBROW}}`) with the real content. If the page does not use a placeholder, delete it; do not leave it in the file.
-6. Run the pre-output checklist below and only then write the file.
-7. Write the file to the path the user specified, or to `./<slug>.html` if no path was given. Pick a slug derived from the page title (lowercase, hyphenated).
+5. Replace text placeholders (`{{PAGE_TITLE}}`, `{{PAGE_DESCRIPTION}}`, `{{HEADLINE}}`, `{{LEDE}}`, `{{CTA_LABEL}}`, `{{EYEBROW}}`) with the real content. If the page does not use a placeholder, delete it; do not leave it in the file.
+6. Replace every asset placeholder (`{{LOGO_DARKBG_DATA_URI}}`, `{{LOGO_LIGHTBG_DATA_URI}}`, `{{OG_IMAGE_DATA_URI}}`, `{{FAVICON_ICO_DATA_URI}}`, `{{FAVICON_192_DATA_URI}}`, `{{FAVICON_256_DATA_URI}}`, plus any of the other favicon-size tokens you actually used) with its matching `data:image/...;base64,...` string from `assets/inline-assets.md`. Paste each data URI verbatim, including the `data:` prefix.
+7. Run the pre-output checklist below and only then write the file.
+8. Write the file to the path the user specified, or to `./<slug>.html` if no path was given. Pick a slug derived from the page title (lowercase, hyphenated).
 
 ### Pre-output checklist
 
@@ -112,7 +115,8 @@ Before writing the file, verify:
 - The `@import` for `https://cdn.shruggie.tech/brand/typography.css` is the first declaration inside the `<style>` block.
 - `data-theme="dark"` is set on `<html>` (unless the user asked for light-default).
 - The tagline renders exactly as `¯\_(ツ)_/¯ We'll figure it out.` with `aria-hidden="true"` on the shruggie span.
-- Every logo and favicon URL is one from the bundled CDN list, not hand-constructed.
+- Every logo and favicon is an inline `data:image/...;base64,...` URI sourced from `assets/inline-assets.md`. No `https://cdn.shruggie.tech/brand/logo/` or `https://cdn.shruggie.tech/brand/favicon/` URL appears anywhere in the file (in `<img src>`, `<link rel="icon">`, or `og:image` / `twitter:image` meta content).
+- No `{{*_DATA_URI}}` placeholder remains unsubstituted in the file.
 - Every `<img>` has `alt` text. Decorative images use `alt=""` and `aria-hidden="true"`.
 - No em-dashes, no en-dashes anywhere in the document.
 - File saves UTF-8 no-BOM, LF endings, single trailing newline.
@@ -131,9 +135,9 @@ Make me a single-page HTML landing for ShruggieTech's AI engineering services. H
 
 A single `.html` file containing:
 
-- `<html lang="en" data-theme="dark">` with the standard meta tags and CDN favicon links.
+- `<html lang="en" data-theme="dark">` with the standard meta tags and inline base64 favicon links.
 - A `<style>` block opening with the CDN typography `@import`, followed by the full brand CSS.
-- A `site-header` with the dark-bg logo and three nav links.
+- A `site-header` with the dark-bg logo embedded as an inline base64 `data:` URI and three nav links.
 - A `hero` section with eyebrow text (`AI ENGINEERING`), the headline, a one-sentence lede, and an orange `button-primary` reading `Book a call`.
 - A `section-services` block containing a `.grid-3` of three `.card` value props.
 - A `section-cta` block closing with the headline, a single CTA button, and the tagline element.
@@ -165,6 +169,8 @@ No CTA button on this one (the deliverable is internal, not marketing). All voic
 ## Additional Resources
 
 - [`assets/brand.css`](assets/brand.css): authoritative brand stylesheet. Inline the whole file into the page's `<style>` block.
-- [`assets/page-template.html`](assets/page-template.html): starting skeleton with all meta tags, favicon links, header, main placeholder, and footer wired up.
+- [`assets/page-template.html`](assets/page-template.html): starting skeleton with all meta tags, favicon links, header, main placeholder, and footer wired up. Logo and favicon attributes use `{{*_DATA_URI}}` placeholders that the build step substitutes from `inline-assets.md`.
+- [`assets/inline-assets.md`](assets/inline-assets.md): pre-computed base64 `data:` URIs for every bundled logo and favicon, keyed by placeholder token. Copy the data URI verbatim into the matching placeholder during the build step.
+- [`assets/brand/`](assets/brand/): byte-identical local copies of the CDN logo and favicon files (mirrors the CDN path layout). The bundled bytes are the source for the data URIs in `inline-assets.md`; refresh both together when the CDN updates.
 - [`assets/sections.md`](assets/sections.md): copyable section primitives (hero, value-props grid, two-column feature, article body, CTA block, footer variants).
-- [`assets/brand-rules.md`](assets/brand-rules.md): compressed reference for token values, typography roles, logo and favicon URLs, voice rules, tagline string, and output-file rules. Consult this when you need an exact value rather than guessing.
+- [`assets/brand-rules.md`](assets/brand-rules.md): compressed reference for token values, typography roles, canonical CDN URLs (source of truth for the bundled assets), voice rules, tagline string, and output-file rules. Consult this when you need an exact value rather than guessing.
