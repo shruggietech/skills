@@ -143,19 +143,31 @@ $DryRun = [bool]$WhatIfPreference
 # Output helpers
 # -----------------------------------------------------------------------
 function Write-Info {
-    param([Parameter(Mandatory)][string]$Message)
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string]$Message
+    )
     if (-not $Quiet) {
         Write-Host $Message
     }
 }
 
 function Write-Verbose2 {
-    param([Parameter(Mandatory)][string]$Message)
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string]$Message
+    )
     Write-Verbose "  [verbose] $Message"
 }
 
 function Write-DryRun {
-    param([Parameter(Mandatory)][string]$Message)
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string]$Message
+    )
     Write-Info "[WhatIf] $Message"
 }
 
