@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `TODO.md`: running list of engineering follow-ups not yet scheduled for a release. Seeded with one item: `scripts/release.{sh,ps1}` does not create a GitHub Release by default (the `v1.0.0` Release was published manually after the tag was cut)
 
+### Changed
+
+- `README.md`: lead with a `Use a skill` section that targets the common Claude browser / desktop user story (download the per-skill zip from the latest GitHub Release, upload via Claude's in-app skill UI). The CLI symlink instructions move into a clearly-labeled `In Claude Code (the CLI)` subsection with an explicit note that symlinking `~/.claude/skills/` has no effect on the Claude browser or desktop apps. Repository Structure section gets `TODO.md` and the new `scripts/release.{sh,ps1}` files added to its tree
+
 ## [1.0.0] - 2026-05-13
 
 ### Fixed

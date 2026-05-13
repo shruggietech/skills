@@ -8,40 +8,35 @@
 
 A curated collection of [Claude Code Skills](https://code.claude.com/docs/en/skills) used by ShruggieTech across client engagements, internal tooling, and consulting work. Skills here encode consistent output formats, workflow automation, and house-style conventions so the same standards apply whether Claude Code is running on a Proxmox host, a personal workstation, or a collaborator's laptop.
 
-Skills are modular folders containing a `SKILL.md` instruction file plus optional supporting assets. Claude Code loads them either automatically (when a user request matches the skill's description) or explicitly via `/skill-name`. See the [official skills documentation](https://code.claude.com/docs/en/skills) for the full model.
+Skills are modular folders containing a `SKILL.md` instruction file plus optional supporting assets. They load the same way whether you use Claude at [claude.ai](https://claude.ai) in a browser, the Claude desktop app, or the Claude Code CLI: a skill triggers either automatically (when your prompt matches its description) or explicitly via `/skill-name`. See the [official skills documentation](https://code.claude.com/docs/en/skills) for the full model.
 
 ## Status
 
 Actively maintained. Treat the `main` branch as the authoritative source; tagged releases are cut on a rolling basis when meaningful changes ship.
 
-## Repository Structure
+## Use a skill
 
-```
-skills/
-├── README.md                # This file
-├── LICENSE                  # Apache 2.0
-├── NOTICE                   # Required attribution notices
-├── CHANGELOG.md
-├── CONVENTIONS.md           # House-style rules every skill must follow
-├── CONTRIBUTING.md          # How to propose or add a skill
-├── scripts/
-│   ├── install.sh           # Symlink helper for Linux and macOS
-│   └── install.ps1          # Symlink helper for Windows 11 (PowerShell)
-└── skills/
-    ├── _template/           # Starting point for new skills
-    │   └── SKILL.md
-    └── <skill-name>/
-        ├── SKILL.md         # Required: frontmatter + instructions
-        ├── README.md        # Optional: human-facing notes
-        ├── assets/          # Optional: templates, references, design tokens
-        └── scripts/         # Optional: executable helpers (bash, python, etc.)
-```
+Skills in this repo are distributed two ways. Pick whichever matches how you use Claude.
 
-Each skill is a self-contained folder. `SKILL.md` is the only required file; everything else is optional and referenced from the body of `SKILL.md` when needed. Supporting files load lazily, so a skill can carry substantial reference material without inflating idle context.
+### In Claude (browser or desktop)
 
-## Installation
+If you use Claude at [claude.ai](https://claude.ai) in a browser, or the Claude desktop app on macOS or Windows, this is the path you want.
 
-Claude Code discovers skills based on where they live on disk. The personal skills directory differs by platform:
+1. Open the [latest release](https://github.com/shruggietech/skills/releases/latest) and download the zip for each skill you want. Files are named `<skill-name>-vX.Y.Z.zip` (for example, `shruggie-html-v1.0.0.zip`).
+2. In Claude, open Settings and find the skill upload UI. Recent builds put it under **Capabilities → Skills**, though the exact label moves as Claude evolves; the in-app search at the top of Settings finds it quickly. Upload the zip as-is. Do not unzip it first.
+3. The skill is now available in your conversations. It triggers automatically on prompts that match its description, or invoke it explicitly with `/skill-name`.
+
+One zip per skill, one upload per skill. Repeat the upload for each skill you want available.
+
+If you want to compare hashes before uploading, every release ships a `SHA256SUMS.txt` next to the zips on the [Releases page](https://github.com/shruggietech/skills/releases/latest).
+
+### In Claude Code (the CLI)
+
+If you run the [Claude Code CLI](https://code.claude.com/docs/en/overview) on your own machine, you have a second option: symlink this repo into Claude Code's skill directory so `git pull` keeps you on the latest version without re-uploading anything. (You can still use the zip approach above if you prefer; the CLI honors uploaded skills the same way the browser does.)
+
+> The symlink path below is for the **Claude Code CLI only**. Symlinking into `~/.claude/skills/` has no effect on the Claude browser or desktop app; those load skills from your Claude account's storage, not from your filesystem.
+
+Personal skills directory by platform:
 
 | Platform   | Personal Skills Path                              | Project Skills Path                |
 | ---------- | ------------------------------------------------- | ---------------------------------- |
@@ -49,11 +44,9 @@ Claude Code discovers skills based on where they live on disk. The personal skil
 | macOS      | `~/.claude/skills/<name>/`                        | `<project>/.claude/skills/<name>/` |
 | Windows 11 | `%USERPROFILE%\.claude\skills\<name>\`            | `<project>\.claude\skills\<name>\` |
 
-Personal skills are available across all your projects. Project skills are scoped to one repository and travel with it through version control.
+Personal skills are available across all your CLI projects. Project skills are scoped to one repository and travel with it through version control.
 
-### Personal install (Linux and macOS)
-
-Clone the repo somewhere stable, then run the install script to symlink each skill into `~/.claude/skills/`:
+#### Personal install (Linux and macOS)
 
 ```bash
 git clone https://github.com/shruggietech/skills.git ~/.shruggietech-skills
@@ -61,9 +54,9 @@ cd ~/.shruggietech-skills
 ./scripts/install.sh
 ```
 
-### Personal install (Windows 11)
+#### Personal install (Windows 11)
 
-Symlinks on Windows 11 require either an elevated PowerShell session or [Developer Mode enabled](https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development). Once one of those is in place, clone and run the PowerShell installer:
+Symlinks on Windows 11 require either an elevated PowerShell session or [Developer Mode enabled](https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development).
 
 ```powershell
 git clone https://github.com/shruggietech/skills.git "$env:USERPROFILE\.shruggietech-skills"
@@ -73,9 +66,9 @@ Set-Location "$env:USERPROFILE\.shruggietech-skills"
 
 Both installers create symlinks rather than copies, so a `git pull` updates every linked skill in place.
 
-### Project install
+#### Project install
 
-If a skill should only apply to a single project, link it directly into that project's `.claude/skills/` directory.
+If a skill should only apply to a single repository, link it directly into that project's `.claude/skills/` directory.
 
 Linux and macOS:
 
@@ -95,9 +88,37 @@ New-Item -ItemType SymbolicLink `
 
 Commit the symlink (or a copied folder) so collaborators get the same behavior.
 
-### Live updates
+#### Live updates
 
 Claude Code watches skill directories. Adding, editing, or removing a skill takes effect in the current session without restarting, as long as the parent skills directory existed when the session started.
+
+## Repository Structure
+
+```
+skills/
+├── README.md                # This file
+├── LICENSE                  # Apache 2.0
+├── NOTICE                   # Required attribution notices
+├── CHANGELOG.md
+├── CONVENTIONS.md           # House-style rules every skill must follow
+├── CONTRIBUTING.md          # How to propose or add a skill
+├── TODO.md                  # Running list of engineering follow-ups
+├── scripts/
+│   ├── install.sh           # CLI symlink helper for Linux and macOS
+│   ├── install.ps1          # CLI symlink helper for Windows 11
+│   ├── release.sh           # Cut a tagged release (Linux and macOS)
+│   └── release.ps1          # Cut a tagged release (Windows 11)
+└── skills/
+    ├── _template/           # Starting point for new skills
+    │   └── SKILL.md
+    └── <skill-name>/
+        ├── SKILL.md         # Required: frontmatter + instructions
+        ├── README.md        # Optional: human-facing notes
+        ├── assets/          # Optional: templates, references, design tokens
+        └── scripts/         # Optional: executable helpers (bash, python, etc.)
+```
+
+Each skill is a self-contained folder. `SKILL.md` is the only required file; everything else is optional and referenced from the body of `SKILL.md` when needed. Supporting files load lazily, so a skill can carry substantial reference material without inflating idle context.
 
 ## Conventions
 
