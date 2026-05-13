@@ -181,10 +181,17 @@ has_unreleased_content() {
 
 get_latest_tag() {
     # Print the highest semver tag matching vX.Y.Z, or empty if none.
-    git -C "$REPO_ROOT" tag --list 'v*.*.*' \
+    # Tolerant of empty tag list: never propagates a non-zero exit.
+    local tags
+    tags="$(git -C "$REPO_ROOT" tag --list 'v*.*.*' 2>/dev/null || true)"
+    if [[ -z "$tags" ]]; then
+        return 0
+    fi
+    printf '%s\n' "$tags" \
         | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
         | sort -V \
-        | tail -n1
+        | tail -n1 \
+        || true
 }
 
 detect_repo_slug() {
