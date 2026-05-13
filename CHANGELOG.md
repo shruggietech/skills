@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `TODO.md`: running list of engineering follow-ups not yet scheduled for a release. Seeded with one item: `scripts/release.{sh,ps1}` does not create a GitHub Release by default (the `v1.0.0` Release was published manually after the tag was cut)
+
 ## [1.0.0] - 2026-05-13
 
 ### Fixed
