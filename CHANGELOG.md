@@ -15,11 +15,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `scripts/release.sh` and `scripts/release.ps1`: parallel release-cutting scripts. Roll the Keep a Changelog `Unreleased` section into a new versioned section, write a `release-notes/vX.Y.Z.md` extract, build one zip per non-template skill in `dist/vX.Y.Z/` (each zip wraps a single top-level skill directory so it drops directly into the Claude UI skill upload), compute a `SHA256SUMS.txt` manifest, create the release commit (`chore(release): cut vX.Y.Z`), tag it as an annotated `vX.Y.Z`, and push. Default bump is patch; flags select major, minor, or an explicit version. Both scripts ship `--dry-run` / `-WhatIf`, verbosity controls, and a `--gh-release` / `-GhRelease` opt-in that wraps `gh release create`
 - `shruggie-html`: `assets/brand/` directory with byte-identical local copies of the 3 brand logos and 7 favicon files mirrored from the brand CDN, plus `assets/inline-assets.md` with pre-computed base64 `data:` URIs keyed by placeholder token for the build step to paste into generated HTML
 - `shruggie-html`: build a single self-contained HTML file using the official ShruggieTech parent-brand identity (immutable color tokens, CDN-wired Space Grotesk and Geist typography, dark-mode-first layout, voice rules, exact tagline)
 
 ### Changed
 
+- `CONTRIBUTING.md`: new `Cutting a Release` section documenting the bash and PowerShell release scripts, the dry-run validation flow, the produced artifacts (CHANGELOG roll, release notes, per-skill zips, SHA256SUMS), and guidance on when to choose major / minor / patch / explicit version bumps
+- `.gitignore`: ignore `.claude/` (Claude Code harness-managed local state: worktrees, plans, settings) so it stops showing as untracked content during `git status` and release-script preflight checks
 - `shruggie-html`: `assets/page-template.html` now uses `{{LOGO_DARKBG_DATA_URI}}`, `{{OG_IMAGE_DATA_URI}}`, and `{{FAVICON_*_DATA_URI}}` placeholders for every logo, favicon, and social-share image; the build step substitutes them from `assets/inline-assets.md`, so generated HTML contains no `cdn.shruggie.tech/brand/(logo|favicon)/` URLs. The typography stylesheet at `https://cdn.shruggie.tech/brand/typography.css` is the one remaining remote dependency (the brand CSS has system-font fallback stacks if it fails to load)
 - Initial repository scaffolding
 - `README.md` covering purpose, installation (Linux, macOS, Windows 11), conventions summary, and references

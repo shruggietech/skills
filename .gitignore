@@ -12,6 +12,9 @@ $RECYCLE.BIN/
 *.swo
 *~
 
+# Claude Code harness local state (worktrees, plans, settings)
+.claude/
+
 # Logs and temp files
 *.log
 *.tmp

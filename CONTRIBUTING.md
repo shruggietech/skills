@@ -97,6 +97,60 @@ Every PR that adds, modifies, or removes a skill updates `CHANGELOG.md`. Entries
 
 Breaking changes to existing skill behavior are called out explicitly under `Changed` and require a minor-version bump at the next tag.
 
+## Cutting a Release
+
+Releases are cut from `main` once a meaningful batch of changes has accumulated under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md). The scripts in `scripts/` handle the version bump, CHANGELOG roll, release-notes generation, per-skill zip artifacts, tag, and push as a single command.
+
+Defaults: increment is **patch** (the third segment of `MAJOR.MINOR.PATCH`); branch is `main`; zips are built; push happens at the end. Both scripts refuse to run if the working tree is dirty, the current branch is not `main`, the local branch is out of sync with `origin/main`, the target tag already exists, or the `Unreleased` section is empty.
+
+### Linux and macOS
+
+```bash
+./scripts/release.sh --dry-run --verbose          # preview the patch release
+./scripts/release.sh                              # cut a patch release
+./scripts/release.sh --minor                      # cut a minor release
+./scripts/release.sh --version 2.0.0              # cut an explicit version
+./scripts/release.sh --major --no-push            # bump major locally, review, push manually
+./scripts/release.sh --gh-release                 # also create the GitHub release with `gh`
+./scripts/release.sh --help
+```
+
+### Windows 11 (PowerShell)
+
+```powershell
+.\scripts\release.ps1 -WhatIf -Verbose            # preview the patch release
+.\scripts\release.ps1                             # cut a patch release
+.\scripts\release.ps1 -Minor                      # cut a minor release
+.\scripts\release.ps1 -Version '2.0.0'            # cut an explicit version
+.\scripts\release.ps1 -Major -NoPush              # bump major locally, review, push manually
+.\scripts\release.ps1 -GhRelease                  # also create the GitHub release with `gh`
+Get-Help .\scripts\release.ps1 -Full
+```
+
+### What gets produced
+
+A successful release writes:
+
+- An updated `CHANGELOG.md` (the `[Unreleased]` contents become `[X.Y.Z] - YYYY-MM-DD`; a fresh empty `[Unreleased]` heading takes their place, and Keep a Changelog footer comparison links are maintained at the bottom of the file).
+- A new `release-notes/vX.Y.Z.md` (the new version's CHANGELOG section, ready to paste into release announcements or GitHub release bodies).
+- One zip per skill at `dist/vX.Y.Z/<skill-name>-vX.Y.Z.zip`, each containing a single top-level directory matching the skill name. These are the files to upload to Claude UI: one skill, one zip, one upload.
+- A `dist/vX.Y.Z/SHA256SUMS.txt` checksum manifest covering the zips.
+- A single annotated tag `vX.Y.Z` whose message body is the contents of the new release-notes file.
+- A single commit (`chore(release): cut vX.Y.Z`) that contains only the CHANGELOG and release-notes changes.
+
+`dist/` is gitignored. `release-notes/` is tracked so historical notes stay with the repo.
+
+### When to use which bump
+
+- **Patch** (default): bug fixes, documentation tweaks, internal refactors that do not change skill behavior.
+- **Minor**: new skills, new flags or capabilities on existing skills, anything that meaningfully changes the trigger phrasing or output shape of a skill (per `CONVENTIONS.md`).
+- **Major**: removals or backwards-incompatible reorganizations (rename of a skill slug, removal of a long-standing flag, etc.).
+- **Explicit version**: only for the first release, or when a coordinated bump is needed for non-default reasons. Must be strictly greater than the highest existing tag.
+
+### Validate with dry-run first
+
+Always run with `--dry-run` (bash) or `-WhatIf` (PowerShell) before cutting a real release. The dry-run runs every preflight check and prints exactly what the real run would do (CHANGELOG transform, zips, commits, tags, push commands) without writing or pushing anything. Pair with `--verbose` / `-Verbose` to see the full CHANGELOG and release-notes previews inline.
+
 ## Security and Sensitive Material
 
 Skills are loaded into Claude's context and may pre-approve tool access. Do not:
