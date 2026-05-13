@@ -451,8 +451,14 @@ roll_changelog() {
     if [[ "$DRY_RUN" -eq 1 ]]; then
         dryrun "would write CHANGELOG.md ($(printf '%s' "$final_content" | wc -l | tr -d ' ') lines)"
         if [[ "$VERBOSE" -eq 1 ]]; then
-            printf '%s\n' "----- CHANGELOG preview (first 40 lines) -----"
-            printf '%s\n' "$final_content" | head -n 40
+            printf '%s\n' "----- CHANGELOG preview (head 30 + tail 10) -----"
+            printf '%s\n' "$final_content" | head -n 30
+            local total
+            total="$(printf '%s\n' "$final_content" | wc -l | tr -d ' ')"
+            if (( total > 40 )); then
+                printf '%s\n' "  ... ($((total - 40)) lines elided) ..."
+            fi
+            printf '%s\n' "$final_content" | tail -n 10
             printf '%s\n' "----- (end preview) -----"
         fi
         return
