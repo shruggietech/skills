@@ -376,7 +376,11 @@ function Get-ChangelogLines {
 }
 
 function Get-UnreleasedBody {
-    param([Parameter(Mandatory)][string[]]$Lines)
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string[]]$Lines
+    )
 
     $inSection = $false
     $out = New-Object System.Collections.Generic.List[string]
