@@ -222,17 +222,18 @@ function Get-LatestSemverTag {
     $raw = & git -C $RepoRoot tag --list 'v*.*.*' 2>$null
     if (-not $raw) { return $null }
 
-    $tags = @($raw) | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' }
+    # Wrap in @() so single-match results stay an array under StrictMode.
+    $tags = @(@($raw) | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' })
     if ($tags.Count -eq 0) { return $null }
 
-    # Sort by version segments (numeric, descending) and pick the top.
-    $sorted = $tags | Sort-Object -Property @{
+    # Sort by version segments (numeric, ascending) and pick the highest.
+    $sorted = @($tags | Sort-Object -Property @{
         Expression = {
             $parts = ($_ -replace '^v', '') -split '\.'
             [int[]]@($parts[0], $parts[1], $parts[2])
         }
-    }
-    return $sorted[-1]
+    })
+    return $sorted[$sorted.Count - 1]
 }
 
 function Compare-Semver {
@@ -384,7 +385,8 @@ function Get-NextVersion {
 }
 
 function Get-ChangelogLines {
-    return Get-Content -LiteralPath $ChangelogPath
+    # Wrap in @() so single-line files still return an array, not a scalar.
+    return ,@(Get-Content -LiteralPath $ChangelogPath)
 }
 
 function Get-UnreleasedBody {
