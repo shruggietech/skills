@@ -29,6 +29,25 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Python virtual environments (for tools/ Python projects)
+.venv/
+venv/
+env/
+
+# Python project caches
+.uv-cache/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Python packaging artifacts
+*.egg-info/
+*.egg
+
+# Local OAuth secrets for tools/gdocs-style-extract
+tools/gdocs-style-extract/credentials.json
+tools/gdocs-style-extract/token.json
+
 # Node detritus (in case any skill ships JS tooling)
 node_modules/
 
