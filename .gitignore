@@ -48,6 +48,9 @@ env/
 tools/gdocs-style-extract/credentials.json
 tools/gdocs-style-extract/token.json
 
+# Default output directory for tools/gdocs-style-extract (generated artifacts)
+tools/gdocs-style-extract/gdocs-extract-out/
+
 # Node detritus (in case any skill ships JS tooling)
 node_modules/
 
