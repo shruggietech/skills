@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-14
+
 ### Added
 
 - `shruggie-docs`: build a single self-contained `.docx` file using the official ShruggieTech parent-brand identity (light-surface color tokens, Space Grotesk and Geist typography embedded into the file, justified body text, brand-correct title color `#00AB21`, lightbg logo). The skill governs six document types (SOW, SOA, MSA, Internal Report, Invoice, Letter) with per-type defaults for TOC inclusion, top block, footer, page-break rule, and tagline inclusion. Bundles the six canonical TTFs (`SpaceGrotesk-Medium`, `SpaceGrotesk-Bold`, `Geist-Regular`, `Geist-Medium`, `Geist-Italic`, `GeistMono-Regular`) byte-identically from `https://cdn.shruggie.tech/brand/fonts/ttf/` and a byte-identical copy of the lightbg logo from the brand CDN. Includes a docx-js scaffold (`assets/document-template.js`) that reads `assets/style-spec.json` and `assets/doc-type-defaults.json` rather than hardcoding any style or layout values, and a font-embedding post-process (`assets/embed-fonts.py`) that drops the six TTFs into `word/fonts/`, patches `word/fontTable.xml` and `word/_rels/document.xml.rels`, and sets the embed flag in `word/settings.xml`
@@ -47,5 +49,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/shruggietech/skills/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/shruggietech/skills/releases/tag/v1.0.0
