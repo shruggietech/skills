@@ -52,8 +52,6 @@ NS_R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 NS_REL = "http://schemas.openxmlformats.org/package/2006/relationships"
 NSMAP_W = {"w": NS_W, "r": NS_R}
 
-CONTENT_TYPE_FONT = "application/vnd.openxmlformats-officedocument.obfuscatedFont"
-
 FONT_BINDINGS = [
     {
         "file": "SpaceGrotesk-Bold.ttf",
@@ -86,6 +84,87 @@ FONT_BINDINGS = [
         "slot": "embedRegular",
     },
 ]
+
+
+# Ordered child sequence of CT_Settings (the type of <w:settings>), per
+# ECMA-376 Part 1. A stable sort against this list places known elements
+# in their schema slot; unknown elements preserve their relative order and
+# trail the known elements. Microsoft Word is lenient about ordering, but
+# strict validators (including scripts/office/validate.py in the public
+# docx skill) reject out-of-sequence children, so the script normalizes
+# the order before writing the part.
+CT_SETTINGS_ORDER = [
+    "writeProtection", "view", "zoom", "removePersonalInformation",
+    "removeDateAndTime", "doNotDisplayPageBoundaries",
+    "displayBackgroundShape", "printPostScriptOverText",
+    "printFractionalCharacterWidth", "printFormsData", "embedTrueTypeFonts",
+    "embedSystemFonts", "saveSubsetFonts", "saveFormsData", "mirrorMargins",
+    "alignBordersAndEdges", "bordersDoNotSurroundHeader",
+    "bordersDoNotSurroundFooter", "gutterAtTop", "hideSpellingErrors",
+    "hideGrammaticalErrors", "activeWritingStyle", "proofState",
+    "formsDesign", "attachedTemplate", "linkStyles", "stylePaneFormatFilter",
+    "stylePaneSortMethod", "documentType", "mailMerge", "revisionView",
+    "trackChanges", "doNotTrackMoves", "doNotTrackFormatting",
+    "documentProtection", "autoFormatOverride", "styleLockTheme",
+    "styleLockQFSet", "defaultTabStop", "autoHyphenation",
+    "consecutiveHyphenLimit", "hyphenationZone", "doNotHyphenateCaps",
+    "showEnvelope", "summaryLength", "clickAndTypeStyle",
+    "defaultTableStyle", "evenAndOddHeaders", "bookFoldRevPrinting",
+    "bookFoldPrinting", "bookFoldPrintingSheets",
+    "drawingGridHorizontalSpacing", "drawingGridVerticalSpacing",
+    "displayHorizontalDrawingGridEvery", "displayVerticalDrawingGridEvery",
+    "doNotUseMarginsForDrawingGridOrigin", "drawingGridHorizontalOrigin",
+    "drawingGridVerticalOrigin", "doNotShadeFormData", "noPunctuationKerning",
+    "characterSpacingControl", "printTwoOnOne", "strictFirstAndLastChars",
+    "noLineBreaksAfter", "noLineBreaksBefore", "savePreviewPicture",
+    "doNotValidateAgainstSchema", "saveInvalidXml", "ignoreMixedContent",
+    "alwaysShowPlaceholderText", "doNotDemarcateInvalidXml",
+    "saveXmlDataOnly", "useXSLTWhenSaving", "saveThroughXslt", "showXMLTags",
+    "alwaysMergeEmptyNamespace", "updateFields", "hdrShapeDefaults",
+    "footnotePr", "endnotePr", "compat", "docVars", "rsids", "mathPr",
+    "attachedSchema", "themeFontLang", "clrSchemeMapping",
+    "doNotIncludeSubdocsInStats", "doNotAutoCompressPictures", "forceUpgrade",
+    "captions", "readModeInkLockDown", "smartTagType", "schemaLibrary",
+    "shapeDefaults", "doNotEmbedSmartTags", "decimalSymbol", "listSeparator",
+]
+
+# Ordered child sequence of CT_Font (the type of each <w:font>), per
+# ECMA-376 Part 1. The four embed* children must appear in this order
+# and must follow any altName/panose1/charset/family/notTrueType/pitch/sig
+# children that may already be present on the element.
+CT_FONT_ORDER = [
+    "altName", "panose1", "charset", "family", "notTrueType", "pitch", "sig",
+    "embedRegular", "embedBold", "embedItalic", "embedBoldItalic",
+]
+
+
+def reorder_children(parent, order: list[str], ns: str) -> None:
+    """Reorder element children of `parent` into canonical sequence.
+
+    Children whose namespace is `ns` and whose local name is in `order` are
+    placed in `order` position. Children outside that set keep their original
+    relative order and trail the known elements. The sort is stable and
+    idempotent.
+    """
+    order_map = {name: i for i, name in enumerate(order)}
+    children = list(parent)
+    if not children:
+        return
+
+    def key(item):
+        idx, child = item
+        qname = etree.QName(child)
+        if qname.namespace == ns and qname.localname in order_map:
+            return (0, order_map[qname.localname], idx)
+        return (1, 0, idx)
+
+    indexed = sorted(enumerate(children), key=key)
+    if [c for _, c in indexed] == children:
+        return
+    for child in children:
+        parent.remove(child)
+    for _, child in indexed:
+        parent.append(child)
 
 
 def unpack_docx(docx_path: Path, dest: Path) -> None:
@@ -133,17 +212,25 @@ def update_content_types(extracted: Path) -> None:
     tree.write(str(ct_path), xml_declaration=True, encoding="UTF-8", standalone=True)
 
 
-def update_document_rels(extracted: Path) -> dict[str, str]:
-    """Add a relationship per font binding to word/_rels/document.xml.rels and
-    return a mapping from font filename to relationship Id."""
-    rels_path = extracted / "word" / "_rels" / "document.xml.rels"
+def update_font_table_rels(extracted: Path) -> dict[str, str]:
+    """Add a relationship per font binding to word/_rels/fontTable.xml.rels
+    and return a mapping from font filename to relationship Id.
+
+    The r:id references on <w:embed*> elements live inside word/fontTable.xml,
+    so the relationships they resolve against must live in that part's
+    relationships file (word/_rels/fontTable.xml.rels) per the Open Packaging
+    Conventions. Writing them to document.xml.rels would leave the r:id
+    references unresolvable from fontTable.xml and silently break font
+    embedding in Microsoft Word.
+    """
+    rels_path = extracted / "word" / "_rels" / "fontTable.xml.rels"
     rels_path.parent.mkdir(parents=True, exist_ok=True)
     rels_ns = "http://schemas.openxmlformats.org/package/2006/relationships"
     if rels_path.exists():
         tree = etree.parse(str(rels_path))
         root = tree.getroot()
     else:
-        root = etree.Element(f"{{{rels_ns}}}Relationships")
+        root = etree.Element(f"{{{rels_ns}}}Relationships", nsmap={None: rels_ns})
         tree = etree.ElementTree(root)
 
     existing_ids = set()
@@ -210,6 +297,15 @@ def update_font_table(extracted: Path, font_to_rid: dict[str, str]) -> None:
         embed_el.set(f"{{{r_ns}}}id", font_to_rid[binding["file"]])
         embed_el.set(f"{{{w_ns}}}fontKey", "{00000000-0000-0000-0000-000000000000}")
 
+    # Bindings can be visited in any order (Bold before Regular for Space
+    # Grotesk, in the current binding list). CT_Font is an ordered
+    # xsd:sequence: the four embed* children must appear in the canonical
+    # order, after any altName/panose1/charset/family/notTrueType/pitch/sig
+    # children. Normalize each <w:font>'s children after all bindings have
+    # been applied.
+    for font_el in root.findall(f"{{{w_ns}}}font"):
+        reorder_children(font_el, CT_FONT_ORDER, w_ns)
+
     tree.write(str(ft_path), xml_declaration=True, encoding="UTF-8", standalone=True)
 
 
@@ -234,6 +330,12 @@ def update_settings(extracted: Path) -> None:
         save_subset = etree.SubElement(root, f"{{{w_ns}}}saveSubsetFonts")
         save_subset.set(f"{{{w_ns}}}val", "false")
 
+    # SubElement appends always go to the end of the parent. CT_Settings is
+    # an ordered xsd:sequence, and embedTrueTypeFonts/saveSubsetFonts sit
+    # early in that sequence (before evenAndOddHeaders and compat). Normalize
+    # the order so strict validators do not reject the part.
+    reorder_children(root, CT_SETTINGS_ORDER, w_ns)
+
     tree.write(str(s_path), xml_declaration=True, encoding="UTF-8", standalone=True)
 
 
@@ -245,27 +347,167 @@ def embed(docx_path: Path) -> None:
         unpack_docx(docx_path, tmpdir)
         ensure_font_payload(tmpdir)
         update_content_types(tmpdir)
-        rid_map = update_document_rels(tmpdir)
+        rid_map = update_font_table_rels(tmpdir)
         update_font_table(tmpdir, rid_map)
         update_settings(tmpdir)
         pack_docx(tmpdir, docx_path)
 
 
 def verify(docx_path: Path) -> None:
-    """Sanity check: confirm the six TTFs are present in the packed archive
-    and that fontTable.xml references each one. Raises SystemExit on failure."""
+    """Verify the embed result is functionally correct.
+
+    Beyond presence checks, this confirms that the relationship graph that
+    actually makes the embedded fonts usable in Microsoft Word is intact:
+    every r:id on a <w:embed*> element in word/fontTable.xml must resolve to
+    a Relationship in word/_rels/fontTable.xml.rels, and that relationship's
+    Target must be a part present in the archive. It also confirms no font
+    relationships have leaked into word/_rels/document.xml.rels (a prior
+    defect that left embedding silently broken) and that the CT_Settings
+    and CT_Font child sequences are normalized.
+
+    Raises SystemExit on any failure. A passing run is necessary but not
+    sufficient: the functional proof is that the document opens in Microsoft
+    Word and renders the brand typefaces on a machine without the six TTFs
+    installed.
+    """
+    rels_ns = "http://schemas.openxmlformats.org/package/2006/relationships"
+    font_rel_type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/font"
     expected = {b["file"] for b in FONT_BINDINGS}
+    expected_families = {b["family"] for b in FONT_BINDINGS}
+
     with zipfile.ZipFile(docx_path, "r") as zf:
         names = set(zf.namelist())
+
+        # 1. All six TTFs are physically present at the expected paths.
         for f in expected:
             arc = f"word/fonts/{f}"
             if arc not in names:
                 raise SystemExit(f"Verification failed: {arc} not in archive.")
+
+        # 2. fontTable.xml exists and references every expected family.
+        if "word/fontTable.xml" not in names:
+            raise SystemExit("Verification failed: word/fontTable.xml missing.")
         with zf.open("word/fontTable.xml") as fh:
-            data = fh.read()
-    for binding in FONT_BINDINGS:
-        if binding["family"].encode("utf-8") not in data:
-            raise SystemExit(f"Verification failed: {binding['family']} not referenced in fontTable.xml.")
+            ft_root = etree.fromstring(fh.read())
+        seen_families = {
+            (f.get(f"{{{NS_W}}}name") or "")
+            for f in ft_root.findall(f"{{{NS_W}}}font")
+        }
+        missing = expected_families - seen_families
+        if missing:
+            raise SystemExit(
+                f"Verification failed: families not referenced in fontTable.xml: {sorted(missing)}"
+            )
+
+        # 3. Collect every r:id used on <w:embed*> elements.
+        rid_refs: list[tuple[str, str, str]] = []  # (family, slot, rid)
+        for font_el in ft_root.findall(f"{{{NS_W}}}font"):
+            family = font_el.get(f"{{{NS_W}}}name") or ""
+            for child in font_el:
+                qname = etree.QName(child)
+                if qname.namespace != NS_W:
+                    continue
+                if qname.localname not in {
+                    "embedRegular", "embedBold", "embedItalic", "embedBoldItalic",
+                }:
+                    continue
+                rid = child.get(f"{{{NS_R}}}id")
+                if not rid:
+                    raise SystemExit(
+                        f"Verification failed: <w:{qname.localname}> on font "
+                        f"{family!r} has no r:id."
+                    )
+                rid_refs.append((family, qname.localname, rid))
+
+        # 4. fontTable.xml.rels exists and provides the relationships those
+        #    r:id references resolve against.
+        ft_rels_path = "word/_rels/fontTable.xml.rels"
+        if ft_rels_path not in names:
+            raise SystemExit(
+                f"Verification failed: {ft_rels_path} missing. Font r:id "
+                f"references in fontTable.xml will not resolve."
+            )
+        with zf.open(ft_rels_path) as fh:
+            ft_rels_root = etree.fromstring(fh.read())
+        rid_to_target: dict[str, str] = {}
+        for rel in ft_rels_root.findall(f"{{{rels_ns}}}Relationship"):
+            rid_to_target[rel.get("Id") or ""] = rel.get("Target") or ""
+
+        for family, slot, rid in rid_refs:
+            if rid not in rid_to_target:
+                raise SystemExit(
+                    f"Verification failed: <w:{slot}> on font {family!r} "
+                    f"references r:id {rid!r}, which is not in {ft_rels_path}. "
+                    f"Valid IDs: {sorted(rid_to_target)}"
+                )
+            target = rid_to_target[rid]
+            # Targets in fontTable.xml.rels are relative to word/.
+            target_path = f"word/{target}" if not target.startswith("/") else target.lstrip("/")
+            if target_path not in names:
+                raise SystemExit(
+                    f"Verification failed: relationship {rid!r} targets "
+                    f"{target!r}, which is not present in the archive."
+                )
+
+        # 5. document.xml.rels must not contain any font-type relationships
+        #    (legacy bug: the script used to write them there, where nothing
+        #    consumed them).
+        doc_rels_path = "word/_rels/document.xml.rels"
+        if doc_rels_path in names:
+            with zf.open(doc_rels_path) as fh:
+                doc_rels_root = etree.fromstring(fh.read())
+            stray = [
+                r.get("Id")
+                for r in doc_rels_root.findall(f"{{{rels_ns}}}Relationship")
+                if (r.get("Type") or "") == font_rel_type
+            ]
+            if stray:
+                raise SystemExit(
+                    f"Verification failed: {doc_rels_path} contains font "
+                    f"relationships {stray}. Font relationships belong in "
+                    f"{ft_rels_path}, not document.xml.rels."
+                )
+
+        # 6. CT_Font child order: regression guard for D2.
+        font_order_map = {n: i for i, n in enumerate(CT_FONT_ORDER)}
+        for font_el in ft_root.findall(f"{{{NS_W}}}font"):
+            family = font_el.get(f"{{{NS_W}}}name") or ""
+            last = -1
+            for child in font_el:
+                qname = etree.QName(child)
+                if qname.namespace != NS_W:
+                    continue
+                pos = font_order_map.get(qname.localname)
+                if pos is None:
+                    continue
+                if pos < last:
+                    raise SystemExit(
+                        f"Verification failed: <w:font name={family!r}> "
+                        f"children are out of CT_Font sequence "
+                        f"(<w:{qname.localname}> appears after a later element)."
+                    )
+                last = pos
+
+        # 7. CT_Settings child order: regression guard for D1.
+        if "word/settings.xml" in names:
+            with zf.open("word/settings.xml") as fh:
+                settings_root = etree.fromstring(fh.read())
+            settings_order_map = {n: i for i, n in enumerate(CT_SETTINGS_ORDER)}
+            last = -1
+            for child in settings_root:
+                qname = etree.QName(child)
+                if qname.namespace != NS_W:
+                    continue
+                pos = settings_order_map.get(qname.localname)
+                if pos is None:
+                    continue
+                if pos < last:
+                    raise SystemExit(
+                        f"Verification failed: word/settings.xml children "
+                        f"are out of CT_Settings sequence "
+                        f"(<w:{qname.localname}> appears after a later element)."
+                    )
+                last = pos
 
 
 def main(argv: list[str]) -> int:

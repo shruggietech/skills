@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `shruggie-docs`: `assets/embed-fonts.py` wrote the six font relationships to `word/_rels/document.xml.rels` instead of `word/_rels/fontTable.xml.rels`, so the `r:id` references in `word/fontTable.xml` did not resolve and Microsoft Word silently fell back to whatever fonts the reader had installed. Font embedding, the script's entire purpose, did not work. The function (now `update_font_table_rels`) targets the correct part-relationships file; idempotency and the existing duplicate-target guard are preserved
+- `shruggie-docs`: `assets/embed-fonts.py` appended `<w:embedTrueTypeFonts>` and `<w:saveSubsetFonts>` to the end of `word/settings.xml`, violating the `CT_Settings` ordered sequence (they belong before `evenAndOddHeaders` and `compat`). The function now normalizes the child sequence after writing, so strict OOXML validators accept the part
+- `shruggie-docs`: `assets/embed-fonts.py` wrote `<w:embed*>` children into each `<w:font>` in `FONT_BINDINGS` iteration order, which placed `<w:embedBold>` before `<w:embedRegular>` for Space Grotesk and violated the `CT_Font` ordered sequence. The function now normalizes each `<w:font>`'s child sequence after applying all bindings
+- `shruggie-docs`: `assets/embed-fonts.py` `verify()` checked only that the six TTFs were present and that each family name string appeared in `fontTable.xml`; it returned `OK` on output that was functionally broken. `verify()` now parses both `fontTable.xml` and `fontTable.xml.rels`, confirms every `r:id` resolves to a relationship whose Target is a part present in the archive, rejects stray font relationships in `document.xml.rels`, and guards the `CT_Settings` and `CT_Font` orderings as regression checks. `--verify-only` now fails on a deliberately broken fixture
+- `shruggie-docs`: removed the unused module-level `CONTENT_TYPE_FONT` constant from `assets/embed-fonts.py`. The constant referenced obfuscated-font handling that the script does not implement; `update_content_types()` correctly emits the non-obfuscated `application/x-font-ttf` content type for the `.ttf` `Default`
+- `shruggie-docs`: `SKILL.md` step 8 of the build procedure and the `assets/embed-fonts.py` resource description updated to reflect that font relationships live in `word/_rels/fontTable.xml.rels` and that `verify()` performs relationship-resolution checks rather than presence-only checks
+
 ## [1.1.0] - 2026-05-14
 
 ### Added
