@@ -1,6 +1,6 @@
 ---
 name: shruggie-docs
-description: Build a single self-contained .docx file using the official ShruggieTech parent-brand identity (light-surface color tokens, Space Grotesk and Geist typography embedded into the file, justified body text, brand-correct title color, lightbg logo). Use whenever the user asks for a Word document, contract, statement of work, scope of work agreement, master subcontract agreement, internal report, invoice, or letter that should read as a ShruggieTech artifact. Trigger on phrasings like "make me a docx", "draft a Statement of Work", "produce a Master Subcontract", "send an invoice for", "write a letter to", or any .docx request that touches a ShruggieTech, Shruggie LLC, or parent-brand surface. The skill collaborates with the operator on document-type selection, TOC inclusion, signatories, and any field that carries legal weight; default to asking the human rather than guessing. Skip for Google Docs API output, PDF generation, slide decks, spreadsheets, and React or Next.js component work.
+description: Build a single self-contained .docx file using the official ShruggieTech parent-brand identity (light-surface color tokens, Space Grotesk and Geist typography embedded into the file, justified body text, brand-correct title color, lightbg logo). Use whenever the user asks for a Word document, contract, statement of work, scope of work agreement, master subcontract agreement, internal report, invoice, or letter that should read as a ShruggieTech artifact. Trigger on phrasings like "make me a docx", "draft a Statement of Work", "produce a Master Subcontract", "send an invoice for", "write a letter to", or any .docx request that touches a ShruggieTech, Shruggie LLC, or parent-brand surface. The skill collaborates with the operator on document-type selection, TOC inclusion, signatories, and any field that carries legal weight; default to asking the human rather than guessing. Skip for Google Docs API output, PDF generation, slide decks, spreadsheets, and React or Next.js component work. For ShruggieTech-branded .docx output, this skill takes precedence over the public docx skill; the public skill's role is limited to final validation and unpack-edit-repack work on existing files.
 disable-model-invocation: false
 ---
 
@@ -25,6 +25,14 @@ Do not invoke this skill for:
 - Pages that are primarily about a product sub-brand (metadexer, Covarity, Knox.Dance, SparkPlan, rustif, shruggie-indexer, shruggie-feedtools). Each sub-brand maintains its own visual identity. If a parent-brand document mentions a sub-brand in passing that is fine; if the document is mostly about the sub-brand, flag the scope conflict and ask whether to defer to the sub-brand's own system.
 - Reformatting the existing SOW/SOA/MSA contract corpus retroactively. The skill governs new documents only.
 
+## Relationship to the public docx skill
+
+shruggie-docs is the canonical `.docx` producer for any ShruggieTech-branded document. It uses docx-js (the same npm `docx` package as the public docx skill at `/mnt/skills/public/docx/`), so the two skills are toolchain-compatible. Their style guidance is not compatible:
+
+- shruggie-docs sets typography, color, page size, margins, and footer per the ShruggieTech brand. Public docx defaults (Arial 12pt, 1-inch margins, black titles) must NOT be applied to shruggie-docs output.
+- Use the public docx skill for exactly two things: (a) the final `python /mnt/skills/public/docx/scripts/office/validate.py` pass after `embed-fonts.py`, and (b) editing existing `.docx` files via unpack-XML-repack when shruggie-docs is not regenerating from scratch.
+- When the document carries a ShruggieTech surface (logo, brand colors, Shruggie LLC attribution, SOW/SOA/MSA/Invoice/Letter context), use shruggie-docs and ignore public docx style patterns.
+
 ## Instructions
 
 The skill's deliverable is always a single `.docx` file with the six brand TTFs embedded inside the archive. The production code path reads only from local bundled assets (`assets/brand/`, `assets/fonts/`); the CDN URLs in `assets/brand-rules.md` document the canonical origin of those bundled bytes and never appear in the build path.
@@ -42,6 +50,7 @@ Document type selection and the most-overridden parameters are operator-collabor
 - Which of the six document types the request maps to, when the request is ambiguous. For example, "draft a contract" maps equally to SOW, SOA, or MSA.
 - Whether to include a table of contents, even when the default for the chosen type would auto-include one.
 - Signatory names, titles, and party identification on any document carrying legal weight (SOW, SOA, MSA, Letter, Invoice).
+- Party metadata fields for SOW, SOA, and MSA. Always ask the operator for these and pass them as `partyMetadata`. The minimum set is Client, Partner, Date.
 - Currency, payment terms, and tax handling for Invoice.
 
 Defaults in `assets/doc-type-defaults.json` exist as fallbacks for unattended runs (batch generation, CI pipelines), not as the preferred path. A confused generation produced from defaults is a worse outcome than a clarifying question.
@@ -69,7 +78,13 @@ System fonts (Arial, Calibri, Times New Roman, Inter) are graceful-degradation f
 - Page size: US Letter portrait, 612 PT x 792 PT (8.5 inch x 11 inch).
 - Margins: 36 PT top, 54 PT bottom, 36 PT left, 36 PT right.
 - One section, continuous; no header; one right-aligned footer.
-- Logo first paragraph of every document: width 180 PT, height computed at build time from the bundled PNG's native aspect ratio rounded to the nearest 0.5 PT, 9 PT margins on all four sides, alt text `ShruggieTech`. The logo is always loaded from `assets/brand/logo/logo-lightbg.png` on disk; never request it from the CDN.
+- Logo first paragraph of every document: width 180 PT, height computed at build time from the bundled PNG's native aspect ratio rounded to the nearest 0.5 PT, 9 PT margins on all four sides, alt text `ShruggieTech`, centered horizontally. The logo is always loaded from `assets/brand/logo/logo-lightbg.png` on disk; never request it from the CDN.
+
+### Page break rule (binding)
+
+For SOW, SOA, and MSA, the only H1 that carries `pageBreakBefore: true` is the Signatures section — always the last H1 in the content array. All other H1s flow naturally without a page break. The logo, TITLE, party metadata block, TOC heading, and section 1 all live on page 1. The signature block must occupy a single page; the page break before it guarantees that, and the signature block itself should not span pages.
+
+Page breaks are caller-controlled: each H1 node in the content array carries its own `pageBreakBefore` boolean. Do not set `pageBreakBefore: true` on any H1 except Signatures.
 
 ### Justification rule (binding)
 
@@ -146,7 +161,7 @@ When the operator has confirmed scope (document type, TOC inclusion, signatories
 4. The scaffold configures page size, margins, section, no header, and the right-aligned footer per the resolved type. The first paragraph is the lightbg logo at 180 PT width with build-time-computed height and 9 PT margins on all four sides.
 5. Insert the type-appropriate top block: TITLE plus optional SUBTITLE for SOW/SOA/MSA/Internal Report, header block for Invoice, date plus recipient block for Letter.
 6. Insert optional TOC (per resolved decision), then body content. The scaffold applies the named-styles map; do not write per-paragraph overrides except for explicit operator-supplied formatting in the body content.
-7. Pack the `.docx` with `Packer.toBuffer(doc)` and write the buffer to disk.
+7. Pack the `.docx` with `Packer.toBuffer(doc)` and write the buffer to disk. The `doc` value must be the `Document` returned by `buildDocument` — do not construct a `new Document(...)`, `new Footer(...)`, or footer paragraph by hand in the build script. The scaffold's `buildFooterParagraph` reads `footer.alignment` from `style-spec.json` (`"END"` = right-aligned in OOXML) and applies any per-type override from `doc-type-defaults.json` (Letter uses `"CENTER"`). Right alignment is required for SOW, SOA, MSA, Internal Report, and Invoice; constructing a footer outside the scaffold silently drops that alignment.
 8. Run the font-embedding post-process: `python assets/embed-fonts.py <path-to-docx>`. This drops the six bundled TTFs into `word/fonts/`, patches `word/fontTable.xml` to reference each embed, writes the font relationships into `word/_rels/fontTable.xml.rels` (the part-relationships file that the `r:id` references in `fontTable.xml` resolve against), and sets the embed flag in `word/settings.xml`. This step is mandatory; there is no flag to skip it.
 9. Validate the final file. Prefer `python /mnt/skills/public/docx/scripts/office/validate.py <path>` when the public docx skill is available in the execution environment. Otherwise, rely on the embed script's `--verify-only` check, which confirms the six TTFs are present in the archive and referenced in `fontTable.xml`.
 10. Write to the path the operator specified, or to `./<slug>.docx` where the slug derives from the document title (lowercase, hyphenated).
@@ -186,12 +201,34 @@ A single `.docx` file containing:
 - The lightbg logo as the first paragraph, 180 PT wide, 9 PT margins.
 - TITLE: `Statement of Work`, Space Grotesk 700, 24 PT, Green Deep, centered.
 - SUBTITLE: `Acme Observability Engagement`, Geist 14 PT, Gray 600, centered.
+- The party metadata block (between two horizontal rules): `Client: Acme Corp`, `Partner: Shruggie LLC`, `Date: <effective date>`.
 - A table of contents (default for SOW).
 - Numbered sections (`1. Engagement Summary`, `2. Scope`, `3. Deliverables`, `4. Milestones and Schedule`, `5. Fees and Payment`, `6. Acceptance Criteria`, `7. Signatures`) with H1 headings.
 - Body paragraphs all justified, Geist 11 PT.
 - A two-row signature block at the end (Shruggie LLC and Acme), party names and titles supplied by the operator.
 - Footer right-aligned: `Statement of Work - Page X of Y`, Geist 10 PT, Gray 600.
 - Six TTFs embedded into the archive under `word/fonts/`.
+
+**Content array (page break on Signatures only):**
+
+```js
+content: [
+  { type: 'h1', text: '1. Engagement Summary' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '2. Scope' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '3. Deliverables' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '4. Milestones and Schedule' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '5. Fees and Payment' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '6. Acceptance Criteria' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '7. Signatures', pageBreakBefore: true }, // only this H1 gets a page break
+  { type: 'body', text: '...' },
+]
+```
 
 Saved to `./acme-observability-sow.docx`.
 
@@ -223,7 +260,7 @@ Saved to `./acme-corp-november-invoice.docx`.
 - [`assets/brand-rules.md`](assets/brand-rules.md): light-surface brand reference. Color tokens, typography, voice rules, tagline, attribution, sub-brand exclusion list, output file rules. Consult this when you need an exact value rather than guessing.
 - [`assets/style-spec.json`](assets/style-spec.json): machine-readable named-styles map. Authoritative source for every style the document scaffold materializes (TITLE, SUBTITLE, H1 through H6, Body, lists, table cells, code, eyebrow, footer, caption, hyperlink, horizontal rule, table default). The scaffold reads this file rather than hardcoding values.
 - [`assets/doc-type-defaults.json`](assets/doc-type-defaults.json): per-document-type defaults (TOC, top block, footer, page-break rule, tagline inclusion) for SOW, SOA, MSA, Internal Report, Invoice, and Letter. Includes the binding `operatorCollaborationRequired` block and the invoice line-items table spec.
-- [`assets/document-template.js`](assets/document-template.js): docx-js scaffold. Exports `buildDocument({ docType, title, subtitle, content, overrides, assetsDir })` plus helpers (`Packer`, `measurePngAspect`, `roundToHalf`, `ptToTwip`, `ptToEmu`). No layout or style values are hardcoded; everything comes from the JSON files.
+- [`assets/document-template.js`](assets/document-template.js): docx-js scaffold. Exports `buildDocument({ docType, title, subtitle, content, overrides, assetsDir, partyMetadata })` plus helpers (`Packer`, `measurePngAspect`, `roundToHalf`, `ptToTwip`, `ptToEmu`). No layout or style values are hardcoded; everything comes from the JSON files.
 - [`assets/embed-fonts.py`](assets/embed-fonts.py): post-generation font embedding. Unpacks the `.docx`, drops the six bundled TTFs into `word/fonts/`, patches `word/fontTable.xml` and `word/_rels/fontTable.xml.rels`, sets the embed flag in `word/settings.xml`, normalizes the child sequence of `<w:settings>` (`CT_Settings`) and each `<w:font>` (`CT_Font`) to satisfy strict OOXML validators, and repacks. Has a `--verify-only` mode that checks every `r:id` on a `<w:embed*>` resolves to a relationship whose Target is a part present in the archive, and fails on a deliberately broken fixture (font relationships stripped, or stray font rels in `document.xml.rels`).
 - [`assets/brand/logo/logo-lightbg.png`](assets/brand/logo/logo-lightbg.png): byte-identical local copy of `https://cdn.shruggie.tech/brand/logo/logo-lightbg.png`. The build path reads from this file on disk; the CDN URL exists only to trace the canonical origin.
 - [`assets/fonts/`](assets/fonts/): byte-identical local copies of the six TTFs from `https://cdn.shruggie.tech/brand/fonts/ttf/` (SpaceGrotesk-Medium, SpaceGrotesk-Bold, Geist-Regular, Geist-Medium, Geist-Italic, GeistMono-Regular). These are the complete embed list; refresh them when the CDN updates.

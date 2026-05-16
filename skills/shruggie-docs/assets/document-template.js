@@ -15,6 +15,11 @@
  *     content: [...],          // array of section descriptors (see below)
  *     overrides: {},           // operator-supplied overrides for type defaults
  *     assetsDir: __dirname,    // absolute path to assets directory
+ *     partyMetadata: {         // SOW/SOA/MSA only; key order is preserved
+ *       Client: 'Acme Corp',
+ *       Partner: 'Shruggie LLC',
+ *       Date: 'June 1, 2026',
+ *     },
  *   });
  *   const buffer = await Packer.toBuffer(doc);
  *   fs.writeFileSync(outPath, buffer);
@@ -340,7 +345,24 @@ function buildTable(node, styleSpec) {
   });
 }
 
-function buildDocument({ docType, title, subtitle, content, overrides, assetsDir }) {
+function buildPartyMetadataBlock(partyMetadata, styleSpec) {
+  const TAB_STOP_TWIP = ptToTwip(108);
+  const paragraphs = [];
+  for (const [label, value] of Object.entries(partyMetadata)) {
+    paragraphs.push(new Paragraph({
+      alignment: AlignmentType.START,
+      tabStops: [{ type: TabStopType.LEFT, position: TAB_STOP_TWIP }],
+      children: [
+        new TextRun({ text: label + ':', font: 'Geist', size: 22, color: '0A0A0A' }),
+        new TextRun({ text: '\t' }),
+        new TextRun({ text: value, font: 'Geist', size: 22, color: '0A0A0A' }),
+      ],
+    }));
+  }
+  return paragraphs;
+}
+
+function buildDocument({ docType, title, subtitle, content, overrides, assetsDir, partyMetadata }) {
   if (!assetsDir) {
     throw new Error('assetsDir is required (absolute path to the skill assets directory).');
   }
@@ -358,6 +380,11 @@ function buildDocument({ docType, title, subtitle, content, overrides, assetsDir
   if (resolved.topBlock === 'title-subtitle') {
     if (title) sectionChildren.push(styleParagraph(title, 'TITLE', styleSpec));
     if (subtitle) sectionChildren.push(styleParagraph(subtitle, 'SUBTITLE', styleSpec));
+    if (resolved.partyMetadataAfterTitle === true && partyMetadata && Object.keys(partyMetadata).length > 0) {
+      sectionChildren.push(buildHorizontalRule(styleSpec));
+      sectionChildren.push(...buildPartyMetadataBlock(partyMetadata, styleSpec));
+      sectionChildren.push(buildHorizontalRule(styleSpec));
+    }
   }
 
   if (Array.isArray(content) && content.length > 0) {
