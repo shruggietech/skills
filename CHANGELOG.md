@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-05-16
+
 ### Added
 
 - `shruggie-docs`: `buildDocument` now accepts an optional `partyMetadata: { [label: string]: string }` argument. For SOW, SOA, and MSA (which set `partyMetadataAfterTitle: true` in `doc-type-defaults.json`), the scaffold renders a horizontal-rule / metadata-row / horizontal-rule block immediately after TITLE and SUBTITLE. Each row is one paragraph with a tab stop at 108 PT; label is Geist 11 PT, value is Geist 11 PT, left-aligned. Key insertion order is preserved, so `{ Client, Partner, Date }` renders in that order
@@ -71,6 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.1.0...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/shruggietech/skills/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/shruggietech/skills/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/shruggietech/skills/releases/tag/v1.0.0
