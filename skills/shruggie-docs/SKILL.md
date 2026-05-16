@@ -72,6 +72,12 @@ System fonts (Arial, Calibri, Times New Roman, Inter) are graceful-degradation f
 - One section, continuous; no header; one right-aligned footer.
 - Logo first paragraph of every document: width 180 PT, height computed at build time from the bundled PNG's native aspect ratio rounded to the nearest 0.5 PT, 9 PT margins on all four sides, alt text `ShruggieTech`, centered horizontally. The logo is always loaded from `assets/brand/logo/logo-lightbg.png` on disk; never request it from the CDN.
 
+### Page break rule (binding)
+
+For SOW, SOA, and MSA, the only H1 that carries `pageBreakBefore: true` is the Signatures section — always the last H1 in the content array. All other H1s flow naturally without a page break. The logo, TITLE, party metadata block, TOC heading, and section 1 all live on page 1. The signature block must occupy a single page; the page break before it guarantees that, and the signature block itself should not span pages.
+
+Page breaks are caller-controlled: each H1 node in the content array carries its own `pageBreakBefore` boolean. Do not set `pageBreakBefore: true` on any H1 except Signatures.
+
 ### Justification rule (binding)
 
 All paragraph body text uses JUSTIFY alignment. This applies to every paragraph rendered with the Body style. It does NOT apply to:
@@ -187,12 +193,34 @@ A single `.docx` file containing:
 - The lightbg logo as the first paragraph, 180 PT wide, 9 PT margins.
 - TITLE: `Statement of Work`, Space Grotesk 700, 24 PT, Green Deep, centered.
 - SUBTITLE: `Acme Observability Engagement`, Geist 14 PT, Gray 600, centered.
+- The party metadata block (between two horizontal rules): `Client: Acme Corp`, `Partner: Shruggie LLC`, `Date: <effective date>`.
 - A table of contents (default for SOW).
 - Numbered sections (`1. Engagement Summary`, `2. Scope`, `3. Deliverables`, `4. Milestones and Schedule`, `5. Fees and Payment`, `6. Acceptance Criteria`, `7. Signatures`) with H1 headings.
 - Body paragraphs all justified, Geist 11 PT.
 - A two-row signature block at the end (Shruggie LLC and Acme), party names and titles supplied by the operator.
 - Footer right-aligned: `Statement of Work - Page X of Y`, Geist 10 PT, Gray 600.
 - Six TTFs embedded into the archive under `word/fonts/`.
+
+**Content array (page break on Signatures only):**
+
+```js
+content: [
+  { type: 'h1', text: '1. Engagement Summary' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '2. Scope' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '3. Deliverables' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '4. Milestones and Schedule' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '5. Fees and Payment' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '6. Acceptance Criteria' },
+  { type: 'body', text: '...' },
+  { type: 'h1', text: '7. Signatures', pageBreakBefore: true }, // only this H1 gets a page break
+  { type: 'body', text: '...' },
+]
+```
 
 Saved to `./acme-observability-sow.docx`.
 
@@ -224,7 +252,7 @@ Saved to `./acme-corp-november-invoice.docx`.
 - [`assets/brand-rules.md`](assets/brand-rules.md): light-surface brand reference. Color tokens, typography, voice rules, tagline, attribution, sub-brand exclusion list, output file rules. Consult this when you need an exact value rather than guessing.
 - [`assets/style-spec.json`](assets/style-spec.json): machine-readable named-styles map. Authoritative source for every style the document scaffold materializes (TITLE, SUBTITLE, H1 through H6, Body, lists, table cells, code, eyebrow, footer, caption, hyperlink, horizontal rule, table default). The scaffold reads this file rather than hardcoding values.
 - [`assets/doc-type-defaults.json`](assets/doc-type-defaults.json): per-document-type defaults (TOC, top block, footer, page-break rule, tagline inclusion) for SOW, SOA, MSA, Internal Report, Invoice, and Letter. Includes the binding `operatorCollaborationRequired` block and the invoice line-items table spec.
-- [`assets/document-template.js`](assets/document-template.js): docx-js scaffold. Exports `buildDocument({ docType, title, subtitle, content, overrides, assetsDir })` plus helpers (`Packer`, `measurePngAspect`, `roundToHalf`, `ptToTwip`, `ptToEmu`). No layout or style values are hardcoded; everything comes from the JSON files.
+- [`assets/document-template.js`](assets/document-template.js): docx-js scaffold. Exports `buildDocument({ docType, title, subtitle, content, overrides, assetsDir, partyMetadata })` plus helpers (`Packer`, `measurePngAspect`, `roundToHalf`, `ptToTwip`, `ptToEmu`). No layout or style values are hardcoded; everything comes from the JSON files.
 - [`assets/embed-fonts.py`](assets/embed-fonts.py): post-generation font embedding. Unpacks the `.docx`, drops the six bundled TTFs into `word/fonts/`, patches `word/fontTable.xml` and `word/_rels/fontTable.xml.rels`, sets the embed flag in `word/settings.xml`, normalizes the child sequence of `<w:settings>` (`CT_Settings`) and each `<w:font>` (`CT_Font`) to satisfy strict OOXML validators, and repacks. Has a `--verify-only` mode that checks every `r:id` on a `<w:embed*>` resolves to a relationship whose Target is a part present in the archive, and fails on a deliberately broken fixture (font relationships stripped, or stray font rels in `document.xml.rels`).
 - [`assets/brand/logo/logo-lightbg.png`](assets/brand/logo/logo-lightbg.png): byte-identical local copy of `https://cdn.shruggie.tech/brand/logo/logo-lightbg.png`. The build path reads from this file on disk; the CDN URL exists only to trace the canonical origin.
 - [`assets/fonts/`](assets/fonts/): byte-identical local copies of the six TTFs from `https://cdn.shruggie.tech/brand/fonts/ttf/` (SpaceGrotesk-Medium, SpaceGrotesk-Bold, Geist-Regular, Geist-Medium, Geist-Italic, GeistMono-Regular). These are the complete embed list; refresh them when the CDN updates.

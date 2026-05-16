@@ -23,7 +23,7 @@
       "logoHeader": true,
       "footer": "standard",
       "footerTemplate": "{DOCUMENT_TITLE} - Page {PAGE} of {NUMPAGES}",
-      "pageBreakRule": "after-cover-and-major-sections",
+      "pageBreakRule": "before-signature-block-only",
       "taglineInFooter": false,
       "carriesLegalWeight": true
     },
@@ -35,7 +35,7 @@
       "logoHeader": true,
       "footer": "standard",
       "footerTemplate": "{DOCUMENT_TITLE} - Page {PAGE} of {NUMPAGES}",
-      "pageBreakRule": "after-cover-and-major-sections",
+      "pageBreakRule": "before-signature-block-only",
       "taglineInFooter": false,
       "carriesLegalWeight": true
     },
@@ -47,7 +47,7 @@
       "logoHeader": true,
       "footer": "standard",
       "footerTemplate": "{DOCUMENT_TITLE} - Page {PAGE} of {NUMPAGES}",
-      "pageBreakRule": "after-cover-and-major-sections",
+      "pageBreakRule": "before-signature-block-only",
       "taglineInFooter": false,
       "carriesLegalWeight": true
     },
