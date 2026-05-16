@@ -1,6 +1,6 @@
 ---
 name: shruggie-docs
-description: Build a single self-contained .docx file using the official ShruggieTech parent-brand identity (light-surface color tokens, Space Grotesk and Geist typography embedded into the file, justified body text, brand-correct title color, lightbg logo). Use whenever the user asks for a Word document, contract, statement of work, scope of work agreement, master subcontract agreement, internal report, invoice, or letter that should read as a ShruggieTech artifact. Trigger on phrasings like "make me a docx", "draft a Statement of Work", "produce a Master Subcontract", "send an invoice for", "write a letter to", or any .docx request that touches a ShruggieTech, Shruggie LLC, or parent-brand surface. The skill collaborates with the operator on document-type selection, TOC inclusion, signatories, and any field that carries legal weight; default to asking the human rather than guessing. Skip for Google Docs API output, PDF generation, slide decks, spreadsheets, and React or Next.js component work.
+description: Build a single self-contained .docx file using the official ShruggieTech parent-brand identity (light-surface color tokens, Space Grotesk and Geist typography embedded into the file, justified body text, brand-correct title color, lightbg logo). Use whenever the user asks for a Word document, contract, statement of work, scope of work agreement, master subcontract agreement, internal report, invoice, or letter that should read as a ShruggieTech artifact. Trigger on phrasings like "make me a docx", "draft a Statement of Work", "produce a Master Subcontract", "send an invoice for", "write a letter to", or any .docx request that touches a ShruggieTech, Shruggie LLC, or parent-brand surface. The skill collaborates with the operator on document-type selection, TOC inclusion, signatories, and any field that carries legal weight; default to asking the human rather than guessing. Skip for Google Docs API output, PDF generation, slide decks, spreadsheets, and React or Next.js component work. For ShruggieTech-branded .docx output, this skill takes precedence over the public docx skill; the public skill's role is limited to final validation and unpack-edit-repack work on existing files.
 disable-model-invocation: false
 ---
 
@@ -24,6 +24,14 @@ Do not invoke this skill for:
 - React, Next.js, Svelte, Vue, or other component-framework work.
 - Pages that are primarily about a product sub-brand (metadexer, Covarity, Knox.Dance, SparkPlan, rustif, shruggie-indexer, shruggie-feedtools). Each sub-brand maintains its own visual identity. If a parent-brand document mentions a sub-brand in passing that is fine; if the document is mostly about the sub-brand, flag the scope conflict and ask whether to defer to the sub-brand's own system.
 - Reformatting the existing SOW/SOA/MSA contract corpus retroactively. The skill governs new documents only.
+
+## Relationship to the public docx skill
+
+shruggie-docs is the canonical `.docx` producer for any ShruggieTech-branded document. It uses docx-js (the same npm `docx` package as the public docx skill at `/mnt/skills/public/docx/`), so the two skills are toolchain-compatible. Their style guidance is not compatible:
+
+- shruggie-docs sets typography, color, page size, margins, and footer per the ShruggieTech brand. Public docx defaults (Arial 12pt, 1-inch margins, black titles) must NOT be applied to shruggie-docs output.
+- Use the public docx skill for exactly two things: (a) the final `python /mnt/skills/public/docx/scripts/office/validate.py` pass after `embed-fonts.py`, and (b) editing existing `.docx` files via unpack-XML-repack when shruggie-docs is not regenerating from scratch.
+- When the document carries a ShruggieTech surface (logo, brand colors, Shruggie LLC attribution, SOW/SOA/MSA/Invoice/Letter context), use shruggie-docs and ignore public docx style patterns.
 
 ## Instructions
 
