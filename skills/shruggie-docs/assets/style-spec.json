@@ -51,6 +51,7 @@
     "altText": "ShruggieTech"
   },
   "footer": {
+    "$comment": "alignment END means right-aligned in OOXML. Binding for SOW, SOA, MSA, Internal Report, Invoice. Letter overrides to CENTER.",
     "alignment": "END",
     "font": "Geist",
     "weight": 400,
