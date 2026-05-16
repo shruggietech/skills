@@ -6,8 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `shruggie-docs`: `buildDocument` now accepts an optional `partyMetadata: { [label: string]: string }` argument. For SOW, SOA, and MSA (which set `partyMetadataAfterTitle: true` in `doc-type-defaults.json`), the scaffold renders a horizontal-rule / metadata-row / horizontal-rule block immediately after TITLE and SUBTITLE. Each row is one paragraph with a tab stop at 108 PT; label is Geist 11 PT, value is Geist 11 PT, left-aligned. Key insertion order is preserved, so `{ Client, Partner, Date }` renders in that order
+
+### Changed
+
+- `shruggie-docs`: `assets/doc-type-defaults.json` `pageBreakRule` for SOW, SOA, and MSA changed from `"after-cover-and-major-sections"` to `"before-signature-block-only"`. The TOC now renders on page 1 immediately after the party metadata block; only the Signatures H1 (always the last H1 in the content array) carries `pageBreakBefore: true`
+- `shruggie-docs`: `SKILL.md` updated with a "Relationship to the public docx skill" section (directly after "When to Use") clarifying that shruggie-docs takes precedence over the public docx skill for ShruggieTech-branded output; the public skill's role is limited to final OOXML validation and unpack-edit-repack of existing files
+- `shruggie-docs`: `SKILL.md` frontmatter description amended with a disambiguation clause stating that shruggie-docs takes precedence over the public docx skill for ShruggieTech-branded output
+
 ### Fixed
 
+- `shruggie-docs`: logo on the cover page was left-aligned (`"alignment": "START"` in `assets/style-spec.json`); changed to `"alignment": "CENTER"` so the logo centers horizontally. The template already called `alignmentFor(logoCfg.alignment)`, so this single token change is sufficient
+- `shruggie-docs`: `assets/style-spec.json` `footer` block lacked a comment explaining that `"alignment": "END"` means right-aligned in OOXML. A `$comment` field now documents the binding for SOW, SOA, MSA, Internal Report, and Invoice, and Letter's `"CENTER"` override. `SKILL.md` step 7 of the build procedure now states that the build script must use the `Document` returned by `buildDocument` and must not construct `new Document(...)`, `new Footer(...)`, or footer paragraphs by hand
 - `shruggie-docs`: `assets/embed-fonts.py` wrote the six font relationships to `word/_rels/document.xml.rels` instead of `word/_rels/fontTable.xml.rels`, so the `r:id` references in `word/fontTable.xml` did not resolve and Microsoft Word silently fell back to whatever fonts the reader had installed. Font embedding, the script's entire purpose, did not work. The function (now `update_font_table_rels`) targets the correct part-relationships file; idempotency and the existing duplicate-target guard are preserved
 - `shruggie-docs`: `assets/embed-fonts.py` appended `<w:embedTrueTypeFonts>` and `<w:saveSubsetFonts>` to the end of `word/settings.xml`, violating the `CT_Settings` ordered sequence (they belong before `evenAndOddHeaders` and `compat`). The function now normalizes the child sequence after writing, so strict OOXML validators accept the part
 - `shruggie-docs`: `assets/embed-fonts.py` wrote `<w:embed*>` children into each `<w:font>` in `FONT_BINDINGS` iteration order, which placed `<w:embedBold>` before `<w:embedRegular>` for Space Grotesk and violated the `CT_Font` ordered sequence. The function now normalizes each `<w:font>`'s child sequence after applying all bindings
