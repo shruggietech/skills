@@ -69,7 +69,7 @@ System fonts (Arial, Calibri, Times New Roman, Inter) are graceful-degradation f
 - Page size: US Letter portrait, 612 PT x 792 PT (8.5 inch x 11 inch).
 - Margins: 36 PT top, 54 PT bottom, 36 PT left, 36 PT right.
 - One section, continuous; no header; one right-aligned footer.
-- Logo first paragraph of every document: width 180 PT, height computed at build time from the bundled PNG's native aspect ratio rounded to the nearest 0.5 PT, 9 PT margins on all four sides, alt text `ShruggieTech`. The logo is always loaded from `assets/brand/logo/logo-lightbg.png` on disk; never request it from the CDN.
+- Logo first paragraph of every document: width 180 PT, height computed at build time from the bundled PNG's native aspect ratio rounded to the nearest 0.5 PT, 9 PT margins on all four sides, alt text `ShruggieTech`, centered horizontally. The logo is always loaded from `assets/brand/logo/logo-lightbg.png` on disk; never request it from the CDN.
 
 ### Justification rule (binding)
 
