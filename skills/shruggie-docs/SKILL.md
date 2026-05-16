@@ -42,6 +42,7 @@ Document type selection and the most-overridden parameters are operator-collabor
 - Which of the six document types the request maps to, when the request is ambiguous. For example, "draft a contract" maps equally to SOW, SOA, or MSA.
 - Whether to include a table of contents, even when the default for the chosen type would auto-include one.
 - Signatory names, titles, and party identification on any document carrying legal weight (SOW, SOA, MSA, Letter, Invoice).
+- Party metadata fields for SOW, SOA, and MSA. Always ask the operator for these and pass them as `partyMetadata`. The minimum set is Client, Partner, Date.
 - Currency, payment terms, and tax handling for Invoice.
 
 Defaults in `assets/doc-type-defaults.json` exist as fallbacks for unattended runs (batch generation, CI pipelines), not as the preferred path. A confused generation produced from defaults is a worse outcome than a clarifying question.

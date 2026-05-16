@@ -18,6 +18,7 @@
     "SOW": {
       "label": "Statement of Work",
       "topBlock": "title-subtitle",
+      "partyMetadataAfterTitle": true,
       "tocDefault": true,
       "logoHeader": true,
       "footer": "standard",
@@ -29,6 +30,7 @@
     "SOA": {
       "label": "Scope of Work Agreement",
       "topBlock": "title-subtitle",
+      "partyMetadataAfterTitle": true,
       "tocDefault": true,
       "logoHeader": true,
       "footer": "standard",
@@ -40,6 +42,7 @@
     "MSA": {
       "label": "Master Subcontract Agreement",
       "topBlock": "title-subtitle",
+      "partyMetadataAfterTitle": true,
       "tocDefault": true,
       "logoHeader": true,
       "footer": "standard",
