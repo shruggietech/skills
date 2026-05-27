@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-05-27
+
 ### Added
 
 - `shruggie-docs`: guidance for PDF emission in e-signature workflows and binding rules for citation footnotes in citation-bearing outputs. `SKILL.md` now requires native page footnotes (`FootnoteReferenceRun` with docx-js `footnotes`) instead of end-of-document references when citations are needed
@@ -83,7 +85,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.1.1...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/shruggietech/skills/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/shruggietech/skills/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/shruggietech/skills/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/shruggietech/skills/releases/tag/v1.0.0
