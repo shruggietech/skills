@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `shruggie-docs`: guidance for PDF emission in e-signature workflows and binding rules for citation footnotes in citation-bearing outputs. `SKILL.md` now requires native page footnotes (`FootnoteReferenceRun` with docx-js `footnotes`) instead of end-of-document references when citations are needed
+
+### Changed
+
+- `shruggie-docs`: `assets/document-template.js` now supports a static TOC block, a `title-only` top block path (used by MSA), default-date resolution (`M/D/YYYY`) for empty `partyMetadata.Date`, and stronger layout controls (extra heading/list spacing after tables, bold label/value two-column metadata table, and optional total-row top border in tables)
+- `shruggie-docs`: defaults updated in `assets/doc-type-defaults.json` so SOW no longer includes TOC by default (`tocDefault: false`) and MSA now uses a title-only top block (`topBlock: "title-only"`)
+- `shruggie-docs`: instruction set in `SKILL.md` updated to match the scaffold behavior (SOW TOC default off, MSA title-only cover block, static TOC rendering, signature label normalization, prose-first writing guidance, citation/footnote policy, and optional LibreOffice PDF emission)
+
 ## [1.1.1] - 2026-05-16
 
 ### Added

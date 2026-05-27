@@ -33,6 +33,10 @@ shruggie-docs is the canonical `.docx` producer for any ShruggieTech-branded doc
 - Use the public docx skill for exactly two things: (a) the final `python /mnt/skills/public/docx/scripts/office/validate.py` pass after `embed-fonts.py`, and (b) editing existing `.docx` files via unpack-XML-repack when shruggie-docs is not regenerating from scratch.
 - When the document carries a ShruggieTech surface (logo, brand colors, Shruggie LLC attribution, SOW/SOA/MSA/Invoice/Letter context), use shruggie-docs and ignore public docx style patterns.
 
+### PDF emission and e-signature workflows
+
+When a generated `.docx` is destined for an e-signature tool (DocuSign, Adobe Sign, PandaDoc, etc.) or any consumer that converts `.docx` to PDF server-side, upload the auto-emitted PDF instead of the `.docx`. E-sign converters use headless engines that do not honor Word's embedded fonts, so a pre-converted PDF preserves brand typography. The `.docx` remains the editable source-of-truth; the PDF is the distribution-ready artifact.
+
 ## Instructions
 
 The skill's deliverable is always a single `.docx` file with the six brand TTFs embedded inside the archive. The production code path reads only from local bundled assets (`assets/brand/`, `assets/fonts/`); the CDN URLs in `assets/brand-rules.md` document the canonical origin of those bundled bytes and never appear in the build path.
@@ -50,7 +54,7 @@ Document type selection and the most-overridden parameters are operator-collabor
 - Which of the six document types the request maps to, when the request is ambiguous. For example, "draft a contract" maps equally to SOW, SOA, or MSA.
 - Whether to include a table of contents, even when the default for the chosen type would auto-include one.
 - Signatory names, titles, and party identification on any document carrying legal weight (SOW, SOA, MSA, Letter, Invoice).
-- Party metadata fields for SOW, SOA, and MSA. Always ask the operator for these and pass them as `partyMetadata`. The minimum set is Client, Partner, Date.
+- Party metadata fields for SOW, SOA, and MSA. Always ask the operator for these and pass them as `partyMetadata`. The minimum set is Client, Partner, Date. If Date is empty, the scaffold defaults it to today's date in M/D/YYYY.
 - Currency, payment terms, and tax handling for Invoice.
 
 Defaults in `assets/doc-type-defaults.json` exist as fallbacks for unattended runs (batch generation, CI pipelines), not as the preferred path. A confused generation produced from defaults is a worse outcome than a clarifying question.
@@ -80,6 +84,10 @@ System fonts (Arial, Calibri, Times New Roman, Inter) are graceful-degradation f
 - One section, continuous; no header; one right-aligned footer.
 - Logo first paragraph of every document: width 180 PT, height computed at build time from the bundled PNG's native aspect ratio rounded to the nearest 0.5 PT, 9 PT margins on all four sides, alt text `ShruggieTech`, centered horizontally. The logo is always loaded from `assets/brand/logo/logo-lightbg.png` on disk; never request it from the CDN.
 
+#### Tables / Total rows
+
+When a table relays a financial sum with the total in the bottom row, set `totalRow: true` on the node. The scaffold renders a 1 PT black top border on the bottom row's cells to signify the total.
+
 ### Page break rule (binding)
 
 For SOW, SOA, and MSA, the only H1 that carries `pageBreakBefore: true` is the Signatures section — always the last H1 in the content array. All other H1s flow naturally without a page break. The logo, TITLE, party metadata block, TOC heading, and section 1 all live on page 1. The signature block must occupy a single page; the page break before it guarantees that, and the signature block itself should not span pages.
@@ -106,14 +114,18 @@ The justified body is part of the ShruggieTech document layout standard. Verify 
 
 | Type | TOC default | Top block | Footer | Tagline in footer |
 |---|---|---|---|---|
-| SOW | yes | TITLE + SUBTITLE | standard | no |
+| SOW | no | TITLE + SUBTITLE | standard | no |
 | SOA | yes | TITLE + SUBTITLE | standard | no |
-| MSA | yes | TITLE + SUBTITLE | standard | no |
+| MSA | yes | TITLE only | standard | no |
 | Internal Report | no | TITLE + SUBTITLE | standard | yes |
 | Invoice | no | invoice header block | invoice (payment terms) | no |
 | Letter | no | date + recipient + subject | minimal (omit on single page) | no |
 
 The full table with `pageBreakRule` and other fields is in `assets/doc-type-defaults.json`. Invoice and Letter layouts have type-specific top blocks documented in detail in that file and in the handoff brief.
+
+#### Signature blocks
+
+Signature blocks use the label `Signature:` followed by an underscore line, then on separate lines `Name:`, `Title:`, and `Date:` rows for each signing party. Never use `By:`. Applies to SOW, SOA, MSA, and Letter.
 
 ### Voice rules
 
@@ -127,6 +139,29 @@ Every line of copy the skill emits follows these:
 6. Humor is permitted in small doses. The shruggie identity invites a wry self-aware tone; do not force it.
 
 If the operator supplies draft copy that violates a rule, surface the conflict and ask before silently rewriting.
+
+### Prose-first structure rule (binding)
+
+Professional documents default to connected prose. Write full paragraphs with clear topic sentences and transitions. Do not split arguments or explanations into bullets when sentences carry the logic more clearly.
+
+Use bulleted or numbered lists only when the content is genuinely list-shaped: a set of discrete parallel options, an ordered procedure, reference data, or a scan-oriented checklist. If there are three or fewer simple items that read naturally in one sentence, keep them inline as prose.
+
+Do not use bolded lead-in labels followed by a colon as a substitute for sentence structure (for example, `Benefit: ...`). Do not nest bullet hierarchies inside otherwise narrative sections.
+
+If you find yourself adding bullets on nearly every line, stop and convert the section into paragraphs. Headings and short tables remain valid structural tools.
+
+### Citation and footnote rule (binding)
+
+Use citations only when the document type and content warrant sourced factual claims. Typical citation-bearing outputs include research memos, technical reports, white papers, compliance artifacts, and legal documents that rely on external sources. Casual internal notes, informal updates, and documents with no sourced claims should not include citations.
+
+When citations are required, render them as true page footnotes, not an end-of-document reference list:
+
+- In body text, insert a real superscript footnote marker.
+- Anchor the corresponding source note at the bottom of the same page via the document format's native footnote mechanism.
+- Do not fake superscript with Unicode or manually typed characters.
+- Do not collect citations into a single references section at the end of the document.
+
+For docx-js specifically, use the `footnotes` configuration on `Document` plus `FootnoteReferenceRun` markers in body paragraphs. If a workflow is constrained to `python-docx` only, explicitly report that first-class footnotes are not supported and ask whether to switch to docx-js; do not silently substitute an end-of-document citation list.
 
 ### Tagline and attribution
 
@@ -159,12 +194,14 @@ When the operator has confirmed scope (document type, TOC inclusion, signatories
 2. Read `assets/style-spec.json` to materialize the named-styles map.
 3. Construct a `Document` via docx-js using `assets/document-template.js` as the scaffold. Pass `assetsDir` to `buildDocument` so the template can locate the bundled logo and JSON specs.
 4. The scaffold configures page size, margins, section, no header, and the right-aligned footer per the resolved type. The first paragraph is the lightbg logo at 180 PT width with build-time-computed height and 9 PT margins on all four sides.
-5. Insert the type-appropriate top block: TITLE plus optional SUBTITLE for SOW/SOA/MSA/Internal Report, header block for Invoice, date plus recipient block for Letter.
-6. Insert optional TOC (per resolved decision), then body content. The scaffold applies the named-styles map; do not write per-paragraph overrides except for explicit operator-supplied formatting in the body content.
-7. Pack the `.docx` with `Packer.toBuffer(doc)` and write the buffer to disk. The `doc` value must be the `Document` returned by `buildDocument` — do not construct a `new Document(...)`, `new Footer(...)`, or footer paragraph by hand in the build script. The scaffold's `buildFooterParagraph` reads `footer.alignment` from `style-spec.json` (`"END"` = right-aligned in OOXML) and applies any per-type override from `doc-type-defaults.json` (Letter uses `"CENTER"`). Right alignment is required for SOW, SOA, MSA, Internal Report, and Invoice; constructing a footer outside the scaffold silently drops that alignment.
-8. Run the font-embedding post-process: `python assets/embed-fonts.py <path-to-docx>`. This drops the six bundled TTFs into `word/fonts/`, patches `word/fontTable.xml` to reference each embed, writes the font relationships into `word/_rels/fontTable.xml.rels` (the part-relationships file that the `r:id` references in `fontTable.xml` resolve against), and sets the embed flag in `word/settings.xml`. This step is mandatory; there is no flag to skip it.
-9. Validate the final file. Prefer `python /mnt/skills/public/docx/scripts/office/validate.py <path>` when the public docx skill is available in the execution environment. Otherwise, rely on the embed script's `--verify-only` check, which confirms the six TTFs are present in the archive and referenced in `fontTable.xml`.
-10. Write to the path the operator specified, or to `./<slug>.docx` where the slug derives from the document title (lowercase, hyphenated).
+5. Insert the type-appropriate top block: TITLE plus optional SUBTITLE for SOW/SOA/Internal Report, TITLE only for MSA, header block for Invoice, date plus recipient block for Letter.
+6. Insert optional TOC (per resolved decision), then body content. The scaffold writes the TOC as static paragraphs (no SDT or TOC field), so recipients do not see a "Right-click to update Table of Contents" prompt. The scaffold applies the named-styles map; do not write per-paragraph overrides except for explicit operator-supplied formatting in the body content.
+7. If the resolved document type and content warrant citations, configure native Word footnotes in the docx-js `Document` (`footnotes` map) and place each in-text citation marker with `FootnoteReferenceRun`. Citations must render as true superscript markers with source notes pinned to page bottoms. Never fall back to a document-end citation list for citation-bearing outputs.
+8. Pack the `.docx` with `Packer.toBuffer(doc)` and write the buffer to disk. The `doc` value must be the `Document` returned by `buildDocument` - do not construct a `new Document(...)`, `new Footer(...)`, or footer paragraph by hand in the build script. The scaffold's `buildFooterParagraph` reads `footer.alignment` from `style-spec.json` (`"END"` = right-aligned in OOXML) and applies any per-type override from `doc-type-defaults.json` (Letter uses `"CENTER"`). Right alignment is required for SOW, SOA, MSA, Internal Report, and Invoice; constructing a footer outside the scaffold silently drops that alignment.
+9. Run the font-embedding post-process: `python assets/embed-fonts.py <path-to-docx>`. This drops the six bundled TTFs into `word/fonts/`, patches `word/fontTable.xml` to reference each embed, writes the font relationships into `word/_rels/fontTable.xml.rels` (the part-relationships file that the `r:id` references in `fontTable.xml` resolve against), and sets the embed flag in `word/settings.xml`. This step is mandatory; there is no flag to skip it.
+10. Validate the final file. Prefer `python /mnt/skills/public/docx/scripts/office/validate.py <path>` when the public docx skill is available in the execution environment. Otherwise, rely on the embed script's `--verify-only` check, which confirms the six TTFs are present in the archive and referenced in `fontTable.xml`.
+11. Emit PDF. Check for libreoffice availability with `which libreoffice || which soffice`. If found, run `libreoffice --headless --convert-to pdf --outdir <output-dir> <docx-path>`, which writes `./<slug>.pdf` alongside the `.docx` and subsets and embeds Geist and Space Grotesk for PDF-only and e-signature workflows. If not found, skip this step and log exactly: `PDF emission skipped: libreoffice not installed. Install via 'brew install --cask libreoffice' on Mac or the equivalent on Linux to enable.` Do not fail the build.
+12. Write to the path the operator specified, or to `./<slug>.docx` where the slug derives from the document title (lowercase, hyphenated).
 
 ### Pre-output checklist
 
@@ -173,16 +210,19 @@ Before writing the final file, verify:
 - Page size is 612 PT x 792 PT, portrait.
 - Margins are exactly 36 PT top, 54 PT bottom, 36 PT left, 36 PT right.
 - The first paragraph contains the lightbg logo with width 180 PT, height computed from the bundled PNG's native aspect ratio, and 9 PT margins on all sides. The logo was loaded from `assets/brand/logo/logo-lightbg.png` on disk, not from the CDN.
-- TITLE (for SOW, SOA, MSA, Internal Report) uses Space Grotesk 700, 24 PT, color `#00AB21`, centered. Invoice and Letter skip this check because they use document-type-specific top blocks.
+- TITLE (for SOW, SOA, MSA, Internal Report) uses Space Grotesk 700, 24 PT, color `#00AB21`, centered. SUBTITLE is used for SOW, SOA, and Internal Report; MSA omits SUBTITLE. Invoice and Letter skip this check because they use document-type-specific top blocks.
 - Every body paragraph uses JUSTIFY alignment. List items, table cells, headings, captions, eyebrow labels, footer text, recipient blocks (letters), and sender / bill-to blocks (invoices) are exempted per the justification rule.
 - No Body paragraph uses Arial, Inter, Calibri, or Times New Roman. Body is Geist throughout.
 - Headings are Space Grotesk (500 or 700 per the style spec).
 - Footer matches the per-type footer rule (standard for contracts and reports, payment-terms for invoices, minimal or absent for letters) using OOXML `PAGE` and `NUMPAGES` field codes where page numbers are rendered.
 - Green Bright (`#2BCC73`) does not appear anywhere in the document.
-- If TOC is included, it renders before any H1 and uses Space Grotesk Medium for TOC entry text.
+- If TOC is included, it renders before any H1 as static paragraphs (not a Word TOC field), and every entry is Geist 11 PT, left-aligned.
+- If citations are required by the document type/content, every citation marker is a native footnote reference and every source appears as a page footnote (not in an end-of-document reference list).
+- If citations are not required by the document type/content, no footnotes are present.
 - The unpacked archive contains all six TTFs under `word/fonts/`, and `word/fontTable.xml` references each one with the appropriate `<w:embedRegular>`, `<w:embedBold>`, or `<w:embedItalic>` element.
 - The unpacked archive contains no font files for Geist Pixel or for Geist weights other than 400, 500, and base italic.
 - The validator (public docx skill or the embed script's `--verify-only`) returns a clean pass.
+- If libreoffice is available on the system, a PDF was emitted at `<output-dir>/<slug>.pdf` with Geist and Space Grotesk subset and embedded.
 
 ## Examples
 
@@ -202,7 +242,6 @@ A single `.docx` file containing:
 - TITLE: `Statement of Work`, Space Grotesk 700, 24 PT, Green Deep, centered.
 - SUBTITLE: `Acme Observability Engagement`, Geist 14 PT, Gray 600, centered.
 - The party metadata block (between two horizontal rules): `Client: Acme Corp`, `Partner: Shruggie LLC`, `Date: <effective date>`.
-- A table of contents (default for SOW).
 - Numbered sections (`1. Engagement Summary`, `2. Scope`, `3. Deliverables`, `4. Milestones and Schedule`, `5. Fees and Payment`, `6. Acceptance Criteria`, `7. Signatures`) with H1 headings.
 - Body paragraphs all justified, Geist 11 PT.
 - A two-row signature block at the end (Shruggie LLC and Acme), party names and titles supplied by the operator.

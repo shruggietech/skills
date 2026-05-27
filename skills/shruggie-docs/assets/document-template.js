@@ -18,7 +18,7 @@
  *     partyMetadata: {         // SOW/SOA/MSA only; key order is preserved
  *       Client: 'Acme Corp',
  *       Partner: 'Shruggie LLC',
- *       Date: 'June 1, 2026',
+ *       Date: 'June 1, 2026',  // optional; defaults to today's M/D/YYYY when empty
  *     },
  *   });
  *   const buffer = await Packer.toBuffer(doc);
@@ -58,13 +58,12 @@ const {
   WidthType,
   BorderStyle,
   ShadingType,
-  TabStopType,
-  TabStopPosition,
   HorizontalPositionAlign,
   VerticalPositionAlign,
   HorizontalPositionRelativeFrom,
   VerticalPositionRelativeFrom,
   PageOrientation,
+  VerticalAlign,
   convertInchesToTwip,
   LevelFormat,
   HeadingLevel,
@@ -73,6 +72,11 @@ const {
 const PT_TO_TWIP = 20;
 const ptToTwip = (pt) => Math.round(pt * PT_TO_TWIP);
 const ptToEmu = (pt) => Math.round(pt * 12700);
+
+function todayMMDDYYYY() {
+  const now = new Date();
+  return `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+}
 
 function loadJSON(p) {
   return JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -163,7 +167,13 @@ function styleParagraph(text, styleName, styleSpec, paragraphOpts) {
   const s = styleSpec.styles[styleName];
   if (!s) throw new Error(`Unknown style: ${styleName}`);
   const spacing = {};
-  if (typeof s.spaceAbovePT === 'number') spacing.before = ptToTwip(s.spaceAbovePT);
+  const extraSpaceAbovePT = paragraphOpts && typeof paragraphOpts.extraSpaceAbovePT === 'number'
+    ? paragraphOpts.extraSpaceAbovePT
+    : 0;
+  if (typeof s.spaceAbovePT === 'number' || extraSpaceAbovePT !== 0) {
+    const baseSpaceAbovePT = typeof s.spaceAbovePT === 'number' ? s.spaceAbovePT : 0;
+    spacing.before = ptToTwip(baseSpaceAbovePT + extraSpaceAbovePT);
+  }
   if (typeof s.spaceBelowPT === 'number') spacing.after = ptToTwip(s.spaceBelowPT);
   if (typeof s.lineSpacing === 'number') spacing.line = s.lineSpacing;
 
@@ -197,12 +207,15 @@ function buildFooterParagraph(footerCfg, docTitle) {
   });
 }
 
-function buildHorizontalRule(styleSpec) {
+function buildHorizontalRule(styleSpec, overrides) {
   const r = styleSpec.horizontalRule;
+  const localOverrides = overrides || {};
+  const spaceAbovePT = typeof localOverrides.spaceAbovePT === 'number' ? localOverrides.spaceAbovePT : r.spaceAbovePT;
+  const spaceBelowPT = typeof localOverrides.spaceBelowPT === 'number' ? localOverrides.spaceBelowPT : r.spaceBelowPT;
   return new Paragraph({
     spacing: {
-      before: ptToTwip(r.spaceAbovePT),
-      after: ptToTwip(r.spaceBelowPT),
+      before: ptToTwip(spaceAbovePT),
+      after: ptToTwip(spaceBelowPT),
     },
     border: {
       bottom: {
@@ -216,9 +229,26 @@ function buildHorizontalRule(styleSpec) {
   });
 }
 
-function renderContent(content, styleSpec) {
+function buildTOCBlock(content, styleSpec) {
+  const tocParagraphs = [styleParagraph('Table of Contents', 'H2', styleSpec)];
+  for (const node of content || []) {
+    if (node.type === 'h1') {
+      tocParagraphs.push(new Paragraph({
+        alignment: AlignmentType.START,
+        spacing: { after: ptToTwip(4), line: 276 },
+        children: [new TextRun({ text: node.text, font: 'Geist', size: 22, color: '0A0A0A' })],
+      }));
+    }
+  }
+  tocParagraphs.push(new Paragraph({ pageBreakBefore: true, children: [] }));
+  return tocParagraphs;
+}
+
+function renderContent(content, styleSpec, tableDefaults) {
   const out = [];
+  let previousNodeType = null;
   for (const node of content) {
+    const extraSpaceAbovePT = previousNodeType === 'table' ? 8 : 0;
     switch (node.type) {
       case 'title':
         out.push(styleParagraph(node.text, 'TITLE', styleSpec));
@@ -227,31 +257,34 @@ function renderContent(content, styleSpec) {
         out.push(styleParagraph(node.text, 'SUBTITLE', styleSpec));
         break;
       case 'h1':
-        out.push(styleParagraph(node.text, 'H1', styleSpec, { pageBreakBefore: node.pageBreakBefore }));
+        out.push(styleParagraph(node.text, 'H1', styleSpec, {
+          pageBreakBefore: node.pageBreakBefore,
+          extraSpaceAbovePT,
+        }));
         break;
       case 'h2':
-        out.push(styleParagraph(node.text, 'H2', styleSpec));
+        out.push(styleParagraph(node.text, 'H2', styleSpec, { extraSpaceAbovePT }));
         break;
       case 'h3':
-        out.push(styleParagraph(node.text, 'H3', styleSpec));
+        out.push(styleParagraph(node.text, 'H3', styleSpec, { extraSpaceAbovePT }));
         break;
       case 'h4':
-        out.push(styleParagraph(node.text, 'H4', styleSpec));
+        out.push(styleParagraph(node.text, 'H4', styleSpec, { extraSpaceAbovePT }));
         break;
       case 'h5':
-        out.push(styleParagraph(node.text, 'H5', styleSpec));
+        out.push(styleParagraph(node.text, 'H5', styleSpec, { extraSpaceAbovePT }));
         break;
       case 'h6':
-        out.push(styleParagraph(node.text, 'H6', styleSpec));
+        out.push(styleParagraph(node.text, 'H6', styleSpec, { extraSpaceAbovePT }));
         break;
       case 'body':
-        out.push(styleParagraph(node.text, 'Body', styleSpec));
+        out.push(styleParagraph(node.text, 'Body', styleSpec, { extraSpaceAbovePT }));
         break;
       case 'eyebrow':
-        out.push(styleParagraph((node.text || '').toUpperCase(), 'EyebrowLabel', styleSpec));
+        out.push(styleParagraph((node.text || '').toUpperCase(), 'EyebrowLabel', styleSpec, { extraSpaceAbovePT }));
         break;
       case 'caption':
-        out.push(styleParagraph(node.text, 'Caption', styleSpec));
+        out.push(styleParagraph(node.text, 'Caption', styleSpec, { extraSpaceAbovePT }));
         break;
       case 'hr':
         out.push(buildHorizontalRule(styleSpec));
@@ -260,21 +293,32 @@ function renderContent(content, styleSpec) {
         out.push(new Paragraph({ children: [], pageBreakBefore: true }));
         break;
       case 'bullets':
-        for (const item of node.items) {
+        for (let i = 0; i < node.items.length; i++) {
+          const item = node.items[i];
+          const baseSpaceAbovePT = styleSpec.styles.BulletListItem.spaceAbovePT || 0;
           out.push(new Paragraph({
             alignment: AlignmentType.START,
-            bullet: { level: 0 },
-            spacing: { after: ptToTwip(4), line: 276 },
+            numbering: { reference: 'default-bullet', level: 0 },
+            spacing: {
+              before: ptToTwip(baseSpaceAbovePT + (i === 0 ? extraSpaceAbovePT : 0)),
+              after: ptToTwip(4),
+              line: 276,
+            },
             children: [styleRun(item, 'BulletListItem', styleSpec)],
           }));
         }
         break;
       case 'numbered':
         for (let i = 0; i < node.items.length; i++) {
+          const baseSpaceAbovePT = styleSpec.styles.NumberedListItem.spaceAbovePT || 0;
           out.push(new Paragraph({
             alignment: AlignmentType.START,
             numbering: { reference: node.reference || 'default-numbered', level: 0 },
-            spacing: { after: ptToTwip(4), line: 276 },
+            spacing: {
+              before: ptToTwip(baseSpaceAbovePT + (i === 0 ? extraSpaceAbovePT : 0)),
+              after: ptToTwip(4),
+              line: 276,
+            },
             children: [styleRun(node.items[i], 'NumberedListItem', styleSpec)],
           }));
         }
@@ -288,7 +332,7 @@ function renderContent(content, styleSpec) {
         }));
         break;
       case 'table':
-        out.push(buildTable(node, styleSpec));
+        out.push(buildTable(node, styleSpec, tableDefaults));
         break;
       case 'raw':
         if (node.paragraph instanceof Paragraph) out.push(node.paragraph);
@@ -296,12 +340,24 @@ function renderContent(content, styleSpec) {
       default:
         throw new Error(`Unknown content node type: ${node.type}`);
     }
+    previousNodeType = node.type;
   }
   return out;
 }
 
-function buildTable(node, styleSpec) {
+function buildTable(node, styleSpec, tableDefaults) {
   const tableCfg = styleSpec.table;
+  const summaryRows = tableDefaults && Array.isArray(tableDefaults.summaryRows)
+    ? tableDefaults.summaryRows
+    : [];
+  const totalSummaryRow = summaryRows.find((row) => row.label === 'Total' && row.topBorder);
+  const totalBorderColor = totalSummaryRow && totalSummaryRow.topBorder && totalSummaryRow.topBorder.color
+    ? totalSummaryRow.topBorder.color
+    : '0A0A0A';
+  const totalBorderWeightPT = totalSummaryRow && totalSummaryRow.topBorder && typeof totalSummaryRow.topBorder.weightPT === 'number'
+    ? totalSummaryRow.topBorder.weightPT
+    : 1;
+  const totalBorderSize = Math.max(1, Math.round(totalBorderWeightPT * 8));
   const rows = [];
   if (node.header) {
     rows.push(new TableRow({
@@ -321,14 +377,28 @@ function buildTable(node, styleSpec) {
       })),
     }));
   }
-  for (const row of node.rows) {
+  for (let rowIndex = 0; rowIndex < node.rows.length; rowIndex++) {
+    const row = node.rows[rowIndex];
+    const isLastDataRow = rowIndex === node.rows.length - 1;
     rows.push(new TableRow({
-      children: row.map((cellText) => new TableCell({
-        children: [new Paragraph({
-          alignment: AlignmentType.START,
-          children: [styleRun(String(cellText), 'TableCell', styleSpec)],
-        })],
-      })),
+      children: row.map((cellText) => {
+        const cellConfig = {
+          children: [new Paragraph({
+            alignment: AlignmentType.START,
+            children: [styleRun(String(cellText), 'TableCell', styleSpec)],
+          })],
+        };
+        if (node.totalRow === true && isLastDataRow) {
+          cellConfig.borders = {
+            top: {
+              style: BorderStyle.SINGLE,
+              size: totalBorderSize,
+              color: totalBorderColor,
+            },
+          };
+        }
+        return new TableCell(cellConfig);
+      }),
     }));
   }
   return new Table({
@@ -346,20 +416,88 @@ function buildTable(node, styleSpec) {
 }
 
 function buildPartyMetadataBlock(partyMetadata, styleSpec) {
-  const TAB_STOP_TWIP = ptToTwip(108);
-  const paragraphs = [];
-  for (const [label, value] of Object.entries(partyMetadata)) {
-    paragraphs.push(new Paragraph({
-      alignment: AlignmentType.START,
-      tabStops: [{ type: TabStopType.LEFT, position: TAB_STOP_TWIP }],
+  const topBottomBorder = { style: BorderStyle.SINGLE, size: 8, color: '000000' };
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'auto' };
+  const entries = Object.entries(partyMetadata);
+  const rows = [];
+  for (let rowIndex = 0; rowIndex < entries.length; rowIndex++) {
+    const [label, value] = entries[rowIndex];
+    const isFirstRow = rowIndex === 0;
+    const isLastRow = rowIndex === entries.length - 1;
+    const resolvedValue =
+      label === 'Date' && (value === undefined || value === null || String(value).trim() === '')
+        ? todayMMDDYYYY()
+        : value;
+    const topBorder = isFirstRow ? topBottomBorder : noBorder;
+    const bottomBorder = isLastRow ? topBottomBorder : noBorder;
+    rows.push(new TableRow({
       children: [
-        new TextRun({ text: label + ':', font: 'Geist', size: 22, color: '0A0A0A' }),
-        new TextRun({ text: '\t' }),
-        new TextRun({ text: value, font: 'Geist', size: 22, color: '0A0A0A' }),
+        new TableCell({
+          width: { size: 25, type: WidthType.PERCENTAGE },
+          verticalAlign: VerticalAlign.CENTER,
+          margins: {
+            top: ptToTwip(8),
+            bottom: ptToTwip(8),
+            left: 0,
+            right: 0,
+          },
+          borders: {
+            top: topBorder,
+            bottom: bottomBorder,
+            left: noBorder,
+            right: noBorder,
+          },
+          children: [new Paragraph({
+            alignment: AlignmentType.START,
+            spacing: { before: 0, after: 0, line: 240 },
+            children: [
+              new TextRun({ text: label + ':', font: 'Geist', size: 22, color: '0A0A0A', bold: true }),
+            ],
+          })],
+        }),
+        new TableCell({
+          width: { size: 75, type: WidthType.PERCENTAGE },
+          verticalAlign: VerticalAlign.CENTER,
+          margins: {
+            top: ptToTwip(8),
+            bottom: ptToTwip(8),
+            left: 0,
+            right: 0,
+          },
+          borders: {
+            top: topBorder,
+            bottom: bottomBorder,
+            left: noBorder,
+            right: noBorder,
+          },
+          children: [new Paragraph({
+            alignment: AlignmentType.START,
+            spacing: { before: 0, after: 0, line: 240 },
+            children: [
+              new TextRun({ text: resolvedValue == null ? '' : String(resolvedValue), font: 'Geist', size: 22, color: '0A0A0A', bold: false }),
+            ],
+          })],
+        }),
       ],
     }));
   }
-  return paragraphs;
+  const table = new Table({
+    rows,
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: {
+      top: topBottomBorder,
+      bottom: topBottomBorder,
+      left: noBorder,
+      right: noBorder,
+      insideHorizontal: noBorder,
+      insideVertical: noBorder,
+    },
+  });
+  const spacer = new Paragraph({
+    spacing: { before: 0, after: 0, line: 240 },
+    children: [new TextRun({ text: '', font: 'Geist', size: 22 })],
+  });
+  return [table, spacer];
 }
 
 function buildDocument({ docType, title, subtitle, content, overrides, assetsDir, partyMetadata }) {
@@ -377,18 +515,30 @@ function buildDocument({ docType, title, subtitle, content, overrides, assetsDir
   const sectionChildren = [];
   sectionChildren.push(buildLogoParagraph(styleSpec, assetsDir));
 
+  const hasPartyMetadata = resolved.partyMetadataAfterTitle === true && partyMetadata && Object.keys(partyMetadata).length > 0;
+  const addPartyMetadataSection = () => {
+    if (!hasPartyMetadata) return;
+    sectionChildren.push(...buildPartyMetadataBlock(partyMetadata, styleSpec));
+  };
+
   if (resolved.topBlock === 'title-subtitle') {
     if (title) sectionChildren.push(styleParagraph(title, 'TITLE', styleSpec));
     if (subtitle) sectionChildren.push(styleParagraph(subtitle, 'SUBTITLE', styleSpec));
-    if (resolved.partyMetadataAfterTitle === true && partyMetadata && Object.keys(partyMetadata).length > 0) {
-      sectionChildren.push(buildHorizontalRule(styleSpec));
-      sectionChildren.push(...buildPartyMetadataBlock(partyMetadata, styleSpec));
-      sectionChildren.push(buildHorizontalRule(styleSpec));
-    }
+    addPartyMetadataSection();
+  }
+
+  if (resolved.topBlock === 'title-only') {
+    if (title) sectionChildren.push(styleParagraph(title, 'TITLE', styleSpec));
+    addPartyMetadataSection();
+  }
+
+  const includeTOC = resolved.tocDefault === true && (!overrides || overrides.tocInclusion !== false);
+  if (includeTOC) {
+    sectionChildren.push(...buildTOCBlock(content, styleSpec));
   }
 
   if (Array.isArray(content) && content.length > 0) {
-    sectionChildren.push(...renderContent(content, styleSpec));
+    sectionChildren.push(...renderContent(content, styleSpec, typeDefaults.invoiceLineItemsTable));
   }
 
   if (resolved.taglineInFooter !== true && resolved.taglineInBody === true) {
@@ -422,6 +572,21 @@ function buildDocument({ docType, title, subtitle, content, overrides, assetsDir
               text: '%1.',
               alignment: AlignmentType.START,
               style: { paragraph: { indent: { left: ptToTwip(18), hanging: ptToTwip(18) } } },
+            },
+          ],
+        },
+        {
+          reference: 'default-bullet',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: '\u2022',
+              alignment: AlignmentType.START,
+              style: {
+                run: { font: 'Geist', size: 22, color: '0A0A0A' },
+                paragraph: { indent: { left: ptToTwip(18), hanging: ptToTwip(12) } },
+              },
             },
           ],
         },
@@ -459,6 +624,7 @@ function buildDocument({ docType, title, subtitle, content, overrides, assetsDir
 module.exports = {
   buildDocument,
   Packer,
+  todayMMDDYYYY,
   measurePngAspect,
   roundToHalf,
   ptToTwip,
