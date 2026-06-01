@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-01
+
 ### Added
 
 - `shruggie-powershell`: author and refactor PowerShell (`.ps1`) scripts to the ShruggieTech scripting standard. Enforces the fixed four-section 80-column layout with four-space body indentation, a load-bearing comment-based help block, an explicit top-level `[CmdletBinding(...)]` (with `SupportsShouldProcess` plus `$PSCmdlet.ShouldProcess` gating for destructive scripts), `Default` and `HelpText` parameter sets with single-letter aliases, the `Write-Log` and `Assert-PSVersion` fixtures, `-LiteralPath` path handling, the 0/1/2 exit-code contract, a no-emoji rule, and UTF-8-no-BOM with LF output. Bundles the authoritative convention reference (`assets/powershell-conventions.md`), copy-paste fixtures (`assets/fixtures.md`), a blank scaffold (`assets/script-template.ps1`), four worked examples (`assets/examples/`: the canonical `Get-Secret.ps1`, the destructive `Remove-StaleArtifact.ps1`, and the `Start-LocalDevServer.ps1` / `Stop-LocalDevServer.ps1` lifecycle pair), and a deterministic compliance checker shipped as PowerShell and Bash twins (`scripts/Test-ScriptCompliance.ps1`, `scripts/test-script-compliance.sh`) so remote agents on non-Windows hosts can verify a script without `pwsh`
@@ -89,7 +91,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.2.0...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/shruggietech/skills/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/shruggietech/skills/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/shruggietech/skills/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/shruggietech/skills/compare/v1.0.0...v1.1.0
