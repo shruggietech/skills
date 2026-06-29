@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-06-29
+
 ### Added
 
 - `shruggie-markdown`: encodes the ShruggieTech house style for authoring Markdown documents (single-H1 structure, the labeled front-matter block with backslash hard breaks, heading spacing, the no-horizontal-rule-next-to-headings rule, automatic GitHub anchor slugs and manual tables of contents, prose-first density, GFM footnotes, language-tagged and nested code fences, base64 data-URI image embedding, and Mermaid or SVG diagrams with a firm no-ASCII-diagram prohibition). Encodes a default-deny HTML policy gated on audience: AI-only documents are pure Markdown, human-facing documents may use three allowlisted HTML constructs (justified text, explicit anchors, inline SVG) only when rendered through a pipeline that honors them. The `description` carries a disambiguation clause so the skill does not fire for the unrelated `shruggie-markdown` software product. Set to auto-invoke (`disable-model-invocation: false`) as reference-and-formatting knowledge, and user-invocable as `/shruggie-markdown`. Bundles the long-form authoring reference (`assets/authoring-reference.md`), the image and diagram reference (`assets/images-and-diagrams.md`), the "what renders where" matrix (`assets/renderer-compatibility.md`), human-facing notes (`README.md`), and twin base64 data-URI encoders (`scripts/encode-image-datauri.sh` and `scripts/Encode-ImageDataUri.ps1`, the latter authored to the `shruggie-powershell` standard and passing its compliance checker)
@@ -96,7 +98,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.3.0...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/shruggietech/skills/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/shruggietech/skills/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/shruggietech/skills/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/shruggietech/skills/compare/v1.1.0...v1.1.1
