@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `shruggie-graph-memory`: a companion skill that makes Claude capture durable knowledge from ordinary conversation into ShruggieGraph (a permission-scoped, source-backed AI memory) via the `create_note` MCP tool, and recall it with `search_knowledge`. Captures decisions, preferences, commitments, and stable facts as cited, audited notes; skips trivia, transient chatter, and unrequested secrets; searches before writing to avoid duplicates; and asks for the target workspace id rather than guessing. Set to auto-invoke (`disable-model-invocation: false`) because automatic capture is the purpose; the ShruggieGraph backend remains the sole authority for access. Bundles a tool reference (`assets/capture-reference.md`) and human-facing setup notes (`README.md`).
+
 ## [1.3.0] - 2026-06-01
 
 ### Added
