@@ -67,11 +67,16 @@ const {
   convertInchesToTwip,
   LevelFormat,
   HeadingLevel,
+  LineRuleType,
 } = docx;
 
 const PT_TO_TWIP = 20;
 const ptToTwip = (pt) => Math.round(pt * PT_TO_TWIP);
 const ptToEmu = (pt) => Math.round(pt * 12700);
+
+// The exact ShruggieTech tagline. Do not paraphrase. Marketing-adjacent
+// documents only (Internal Report covers, capabilities one-pagers).
+const TAGLINE = "¯\\_(ツ)_/¯ We'll figure it out.";
 
 function todayMMDDYYYY() {
   const now = new Date();
@@ -132,6 +137,7 @@ function buildLogoParagraph(styleSpec, assetsDir) {
     },
     children: [
       new ImageRun({
+        type: 'png',
         data: fs.readFileSync(pngPath),
         transformation: {
           width: ptToEmu(widthPT) / 9525,
@@ -175,7 +181,10 @@ function styleParagraph(text, styleName, styleSpec, paragraphOpts) {
     spacing.before = ptToTwip(baseSpaceAbovePT + extraSpaceAbovePT);
   }
   if (typeof s.spaceBelowPT === 'number') spacing.after = ptToTwip(s.spaceBelowPT);
-  if (typeof s.lineSpacing === 'number') spacing.line = s.lineSpacing;
+  if (typeof s.lineSpacing === 'number') {
+    spacing.line = s.lineSpacing;
+    spacing.lineRule = LineRuleType.AUTO;
+  }
 
   const p = {
     alignment: alignmentFor(s.alignment),
@@ -207,6 +216,13 @@ function buildFooterParagraph(footerCfg, docTitle) {
   });
 }
 
+function buildTaglineFooterParagraph(footerCfg) {
+  return new Paragraph({
+    alignment: alignmentFor(footerCfg.alignment || 'END'),
+    children: [new TextRun({ text: TAGLINE, font: 'Geist', size: 20, color: '6B6B6B' })],
+  });
+}
+
 function buildHorizontalRule(styleSpec, overrides) {
   const r = styleSpec.horizontalRule;
   const localOverrides = overrides || {};
@@ -235,7 +251,7 @@ function buildTOCBlock(content, styleSpec) {
     if (node.type === 'h1') {
       tocParagraphs.push(new Paragraph({
         alignment: AlignmentType.START,
-        spacing: { after: ptToTwip(4), line: 276 },
+        spacing: { after: ptToTwip(4), line: 276, lineRule: LineRuleType.AUTO },
         children: [new TextRun({ text: node.text, font: 'Geist', size: 22, color: '0A0A0A' })],
       }));
     }
@@ -247,6 +263,11 @@ function buildTOCBlock(content, styleSpec) {
 function renderContent(content, styleSpec, tableDefaults) {
   const out = [];
   let previousNodeType = null;
+  // Each numbered list needs its own concrete numbering instance under the
+  // shared 'default-numbered' reference, or docx-js runs one continuous
+  // counter across every numbered paragraph and later lists continue the
+  // earlier count instead of restarting at 1. Increment once per numbered node.
+  let numberedInstance = 0;
   for (const node of content) {
     const extraSpaceAbovePT = previousNodeType === 'table' ? 8 : 0;
     switch (node.type) {
@@ -303,6 +324,7 @@ function renderContent(content, styleSpec, tableDefaults) {
               before: ptToTwip(baseSpaceAbovePT + (i === 0 ? extraSpaceAbovePT : 0)),
               after: ptToTwip(4),
               line: 276,
+              lineRule: LineRuleType.AUTO,
             },
             children: [styleRun(item, 'BulletListItem', styleSpec)],
           }));
@@ -313,20 +335,22 @@ function renderContent(content, styleSpec, tableDefaults) {
           const baseSpaceAbovePT = styleSpec.styles.NumberedListItem.spaceAbovePT || 0;
           out.push(new Paragraph({
             alignment: AlignmentType.START,
-            numbering: { reference: node.reference || 'default-numbered', level: 0 },
+            numbering: { reference: node.reference || 'default-numbered', level: 0, instance: numberedInstance },
             spacing: {
               before: ptToTwip(baseSpaceAbovePT + (i === 0 ? extraSpaceAbovePT : 0)),
               after: ptToTwip(4),
               line: 276,
+              lineRule: LineRuleType.AUTO,
             },
             children: [styleRun(node.items[i], 'NumberedListItem', styleSpec)],
           }));
         }
+        numberedInstance++;
         break;
       case 'codeBlock':
         out.push(new Paragraph({
           alignment: AlignmentType.START,
-          spacing: { before: ptToTwip(4), after: ptToTwip(4), line: 276 },
+          spacing: { before: ptToTwip(4), after: ptToTwip(4), line: 276, lineRule: LineRuleType.AUTO },
           shading: { type: ShadingType.CLEAR, fill: 'F5F5F5', color: 'auto' },
           children: [styleRun(node.text, 'CodeBlock', styleSpec)],
         }));
@@ -334,6 +358,42 @@ function renderContent(content, styleSpec, tableDefaults) {
       case 'table':
         out.push(buildTable(node, styleSpec, tableDefaults));
         break;
+      case 'image': {
+        // First-class image node. Centralizes the correctness concerns that
+        // used to fall on every caller of the raw+ImageRun path: explicit PNG
+        // type (see the logo .undefined defect), height derived from native
+        // aspect, centering, and mandatory non-empty alt text.
+        const imgPath = node.path;
+        if (typeof imgPath !== 'string' || imgPath.trim() === '') {
+          throw new Error("image node requires a non-empty 'path'.");
+        }
+        const altText = node.altText;
+        if (typeof altText !== 'string' || altText.trim() === '') {
+          throw new Error(`image node requires non-empty 'altText' (path: ${imgPath}).`);
+        }
+        const widthPT = typeof node.widthPT === 'number' && node.widthPT > 0 ? node.widthPT : 360;
+        const { aspect } = measurePngAspect(imgPath);
+        const heightPT = roundToHalf(widthPT / aspect);
+        out.push(new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: ptToTwip(extraSpaceAbovePT), after: ptToTwip(4) },
+          children: [
+            new ImageRun({
+              type: 'png',
+              data: fs.readFileSync(imgPath),
+              transformation: {
+                width: ptToEmu(widthPT) / 9525,
+                height: ptToEmu(heightPT) / 9525,
+              },
+              altText: { title: altText, description: altText, name: altText },
+            }),
+          ],
+        }));
+        if (typeof node.caption === 'string' && node.caption.trim() !== '') {
+          out.push(styleParagraph(node.caption, 'Caption', styleSpec));
+        }
+        break;
+      }
       case 'raw':
         if (node.paragraph instanceof Paragraph) out.push(node.paragraph);
         break;
@@ -449,7 +509,7 @@ function buildPartyMetadataBlock(partyMetadata, styleSpec) {
           },
           children: [new Paragraph({
             alignment: AlignmentType.START,
-            spacing: { before: 0, after: 0, line: 240 },
+            spacing: { before: 0, after: 0, line: 240, lineRule: LineRuleType.AUTO },
             children: [
               new TextRun({ text: label + ':', font: 'Geist', size: 22, color: '0A0A0A', bold: true }),
             ],
@@ -472,7 +532,7 @@ function buildPartyMetadataBlock(partyMetadata, styleSpec) {
           },
           children: [new Paragraph({
             alignment: AlignmentType.START,
-            spacing: { before: 0, after: 0, line: 240 },
+            spacing: { before: 0, after: 0, line: 240, lineRule: LineRuleType.AUTO },
             children: [
               new TextRun({ text: resolvedValue == null ? '' : String(resolvedValue), font: 'Geist', size: 22, color: '0A0A0A', bold: false }),
             ],
@@ -494,7 +554,7 @@ function buildPartyMetadataBlock(partyMetadata, styleSpec) {
     },
   });
   const spacer = new Paragraph({
-    spacing: { before: 0, after: 0, line: 240 },
+    spacing: { before: 0, after: 0, line: 240, lineRule: LineRuleType.AUTO },
     children: [new TextRun({ text: '', font: 'Geist', size: 22 })],
   });
   return [table, spacer];
@@ -542,13 +602,23 @@ function buildDocument({ docType, title, subtitle, content, overrides, assetsDir
   }
 
   if (resolved.taglineInFooter !== true && resolved.taglineInBody === true) {
-    sectionChildren.push(styleParagraph("¯\\_(ツ)_/¯ We'll figure it out.", 'Body', styleSpec));
+    sectionChildren.push(styleParagraph(TAGLINE, 'Body', styleSpec));
   }
 
   const footerCfg = Object.assign({}, styleSpec.footer, {
     template: resolved.footerTemplate || styleSpec.footer.defaultTemplate,
     alignment: resolved.footerAlignment || styleSpec.footer.alignment,
   });
+
+  // The footer template carries no tagline token, so when taglineInFooter is
+  // set the tagline must be appended as its own footer line here. Otherwise
+  // the flag maps to no output (the body-tagline branch above is suppressed
+  // whenever taglineInFooter is true).
+  const footerChildren = [];
+  if (resolved.taglineInFooter === true) {
+    footerChildren.push(buildTaglineFooterParagraph(footerCfg));
+  }
+  footerChildren.push(buildFooterParagraph(footerCfg, title || resolved.label));
 
   const doc = new Document({
     creator: 'Shruggie LLC',
@@ -611,7 +681,7 @@ function buildDocument({ docType, title, subtitle, content, overrides, assetsDir
         },
         footers: {
           default: new Footer({
-            children: [buildFooterParagraph(footerCfg, title || resolved.label)],
+            children: footerChildren,
           }),
         },
         children: sectionChildren,

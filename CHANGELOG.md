@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `shruggie-docs`: first-class `image` content node in `assets/document-template.js`. `{ type: 'image', path, widthPT, altText, caption? }` centralizes the correctness concerns that previously fell on every caller of the `raw` + hand-built `ImageRun` path: it reads the PNG's native dimensions, derives the height from the aspect ratio (rounded to 0.5 PT), sets the explicit `type: 'png'` so no `.undefined` media part is emitted, centers the image, enforces non-empty `altText` (throwing at build time otherwise, per the output-hygiene rule), and emits an optional `Caption` paragraph. `widthPT` defaults to 360 PT. Documented in `SKILL.md`
+
+### Changed
+
+- `shruggie-docs`: `assets/embed-fonts.py` `verify()` now asserts media integrity in addition to the font-relationship graph. Every `word/media/*` part must carry a recognized image extension and resolve to a content type (a `<Default>` for its extension or an `<Override>` for its part name in `[Content_Types].xml`). This catches the class of defect where a media part shipped as `.undefined` passed the public docx validator despite having no valid extension or content type; `--verify-only` fails on a deliberately broken fixture
+
+### Fixed
+
+- `shruggie-docs`: wrapped TITLE, H1, and H2 headings collided with themselves because `assets/document-template.js` set `spacing.line` without a `w:lineRule`, so LibreOffice read `line="276"` as an absolute 13.8 PT instead of a 1.15x multiple. A 24 PT title (glyph height ~27.9 PT) overlapped; body text survived only because 13.8 PT happened to clear its glyphs. `LineRuleType.AUTO` is now attached to every spacing object carrying a `line` value (`styleParagraph`, TOC entries, bullet and numbered list items, code blocks, and the party-metadata cells and spacer)
+- `shruggie-docs`: two or more independent numbered lists in one document shared a single counter, so the second list continued the first (4, 5, 6) instead of restarting at 1. `renderContent` in `assets/document-template.js` now gives each numbered list its own concrete numbering instance under the shared `default-numbered` reference (incrementing `numbering.instance` per `numbered` node), so each list restarts at 1
+- `shruggie-docs`: the brand logo embedded as `word/media/<hash>.undefined` with no matching content type because `buildLogoParagraph` constructed its `ImageRun` without a `type`, which docx 9.x requires to infer the media extension. The logo `ImageRun` now sets `type: 'png'`
+- `shruggie-docs`: image captions rendered off-brand (DejaVuSans-Oblique instead of Geist italic) in the LibreOffice PDF because `assets/style-spec.json` set `Caption.font` to the full name `"Geist Italic"` rather than the family `"Geist"`, which LibreOffice cannot match. `Caption.font` (and the same latent issue in `BodyItalic.font`) is now `"Geist"` with the `italic` flag pulling the embedded italic face
+- `shruggie-docs`: the `taglineInFooter: true` default on Internal Report rendered the tagline nowhere. The footer template carries no tagline token and the body-tagline branch is suppressed whenever `taglineInFooter` is true, so the flag mapped to no output. `buildDocument` now appends the exact tagline as its own footer line when `taglineInFooter` is true
+
 ## [1.4.0] - 2026-06-29
 
 ### Added

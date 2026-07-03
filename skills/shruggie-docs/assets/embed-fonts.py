@@ -137,6 +137,14 @@ CT_FONT_ORDER = [
     "embedRegular", "embedBold", "embedItalic", "embedBoldItalic",
 ]
 
+# Image extensions a word/media/* part may legitimately carry. A media part
+# whose extension is absent from this set (e.g. the '.undefined' produced when
+# an ImageRun omits its type) has no inferable content type and can silently
+# fail to render in strict OOXML viewers and server-side PDF/e-sign converters.
+KNOWN_IMAGE_EXTS = {
+    "png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "emf", "wmf", "svg",
+}
+
 
 def reorder_children(parent, order: list[str], ns: str) -> None:
     """Reorder element children of `parent` into canonical sequence.
@@ -508,6 +516,45 @@ def verify(docx_path: Path) -> None:
                         f"(<w:{qname.localname}> appears after a later element)."
                     )
                 last = pos
+
+        # 8. Media integrity: every word/media/* part must have a recognized
+        #    image extension and a resolvable content type (a <Default> for its
+        #    extension or an <Override> for its part name). Guards against the
+        #    '.undefined' media class of defect, which passed the public docx
+        #    validator despite having no valid extension or content type.
+        ct_ns = "http://schemas.openxmlformats.org/package/2006/content-types"
+        media_parts = [n for n in names if n.startswith("word/media/") and not n.endswith("/")]
+        if media_parts:
+            if "[Content_Types].xml" not in names:
+                raise SystemExit(
+                    "Verification failed: [Content_Types].xml missing while "
+                    "word/media/* parts are present."
+                )
+            with zf.open("[Content_Types].xml") as fh:
+                ct_root = etree.fromstring(fh.read())
+            default_exts = {
+                (d.get("Extension") or "").lower()
+                for d in ct_root.findall(f"{{{ct_ns}}}Default")
+            }
+            override_parts = {
+                o.get("PartName") or ""
+                for o in ct_root.findall(f"{{{ct_ns}}}Override")
+            }
+            for part in media_parts:
+                ext = part.rsplit(".", 1)[-1].lower() if "." in part.rsplit("/", 1)[-1] else ""
+                if ext not in KNOWN_IMAGE_EXTS:
+                    raise SystemExit(
+                        f"Verification failed: media part {part!r} has no "
+                        f"recognized image extension (got {ext!r}). Known "
+                        f"extensions: {sorted(KNOWN_IMAGE_EXTS)}."
+                    )
+                part_name = "/" + part
+                if ext not in default_exts and part_name not in override_parts:
+                    raise SystemExit(
+                        f"Verification failed: media part {part!r} has no "
+                        f"content type (no <Default Extension={ext!r}> and no "
+                        f"<Override PartName={part_name!r}> in [Content_Types].xml)."
+                    )
 
 
 def main(argv: list[str]) -> int:

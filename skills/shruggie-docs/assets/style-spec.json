@@ -164,7 +164,7 @@
       "$note": "Inline run style only; applied inside a Body paragraph."
     },
     "BodyItalic": {
-      "font": "Geist Italic",
+      "font": "Geist",
       "sizePT": 11,
       "weight": 400,
       "italic": true,
@@ -249,7 +249,7 @@
       "lineSpacing": 276
     },
     "Caption": {
-      "font": "Geist Italic",
+      "font": "Geist",
       "sizePT": 9,
       "weight": 400,
       "italic": true,

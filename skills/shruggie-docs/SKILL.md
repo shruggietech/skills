@@ -88,6 +88,16 @@ System fonts (Arial, Calibri, Times New Roman, Inter) are graceful-degradation f
 
 When a table relays a financial sum with the total in the bottom row, set `totalRow: true` on the node. The scaffold renders a 1 PT black top border on the bottom row's cells to signify the total.
 
+#### Images
+
+Embed a screenshot or figure with a first-class `image` content node rather than hand-building an `ImageRun` and passing it through `raw`:
+
+```js
+{ type: 'image', path: '/abs/path/to/shot.png', widthPT: 360, altText: 'Dashboard showing p95 latency by service', caption: 'Figure 1. Latency after the rollout.' }
+```
+
+The scaffold reads the PNG's native dimensions, computes the height from the aspect ratio, sets the correct media type (so no `.undefined` media part is emitted), centers the image, and emits an optional `Caption` paragraph when `caption` is supplied. Alt text is mandatory: an empty or missing `altText` throws at build time, per the output-hygiene rule that every image carry meaningful alt text. Only PNG is supported. `widthPT` defaults to 360 PT when omitted.
+
 ### Page break rule (binding)
 
 For SOW, SOA, and MSA, the only H1 that carries `pageBreakBefore: true` is the Signatures section — always the last H1 in the content array. All other H1s flow naturally without a page break. The logo, TITLE, party metadata block, TOC heading, and section 1 all live on page 1. The signature block must occupy a single page; the page break before it guarantees that, and the signature block itself should not span pages.
