@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-07-03
+
 ### Changed
 
 - `shruggie-markdown`: two new authoring rules. Prose (paragraphs, list items, blockquotes) is now hard-wrapped at 80 characters (the markdownlint MD013 default), with long unbreakable tokens (URLs, file paths, inline-code literals) placed at the start of their own continuation line so no whitespace lands past the limit (the MD013 escape hatch); table rows, code fence contents, headings, and link reference definitions are exempt from wrapping, with a halt-gate directing the operator to MD013 config exceptions (`tables: false`, `code_blocks: false`, `heading_line_length`) when those constructs must exceed 80. Continuation lines produced by wrapping must never begin with a character run Markdown parses as block syntax (`-`, `+`, `*`, `>`, `#`, digits followed by `.` or `)`, leading `|`, or extra indentation); the remedy is re-breaking the line, with a backslash escape as last resort. Fixes the class of defect where a wrapped list-item continuation beginning with `+` rendered as a nested bullet. Worked examples added to `assets/authoring-reference.md`; frontmatter `description` now mentions the 80-column discipline
@@ -120,7 +122,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.5.0...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/shruggietech/skills/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/shruggietech/skills/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/shruggietech/skills/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/shruggietech/skills/compare/v1.2.0...v1.3.0
