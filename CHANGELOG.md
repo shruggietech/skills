@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-07-03
+
 ### Added
 
 - `shruggie-docs`: first-class `image` content node in `assets/document-template.js`. `{ type: 'image', path, widthPT, altText, caption? }` centralizes the correctness concerns that previously fell on every caller of the `raw` + hand-built `ImageRun` path: it reads the PNG's native dimensions, derives the height from the aspect ratio (rounded to 0.5 PT), sets the explicit `type: 'png'` so no `.undefined` media part is emitted, centers the image, enforces non-empty `altText` (throwing at build time otherwise, per the output-hygiene rule), and emits an optional `Caption` paragraph. `widthPT` defaults to 360 PT. Documented in `SKILL.md`
@@ -114,7 +116,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.4.0...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/shruggietech/skills/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/shruggietech/skills/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/shruggietech/skills/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/shruggietech/skills/compare/v1.1.1...v1.2.0
