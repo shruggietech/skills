@@ -92,9 +92,9 @@ renders H1 and H2 with a native bottom border, so a manual rule next to them is
 redundant and visually doubles the divider. Two gotchas:
 
 - A `---` on the line immediately after a line of non-blank text does not render
-  as a horizontal rule. It promotes the text above it into a setext H2. This is a
-  frequent source of accidental headings. Keep a blank line above any intentional
-  `---`.
+  as a horizontal rule. It promotes the text above it into a setext H2. This is
+  a frequent source of accidental headings. Keep a blank line above any
+  intentional `---`.
 - Use horizontal rules sparingly, only as a true section break in long human-
   facing documents, and always with a blank line above and below.
 
@@ -180,6 +180,69 @@ and narrative content is prose. This is a house preference, stated as such: when
 the content reads as a sentence or two of explanation, write it as a sentence or
 two, not as a fragment with a bullet in front of it.
 
+## Line length and wrap-safe continuations
+
+Hard-wrap prose at 80 characters. List-item continuations indent to the
+content column: two spaces after the `-` marker, three after `1.`.
+
+The wrap point matters as much as the wrap width. A continuation line that
+begins with `-`, `+`, `*`, `>`, `#`, a digit run followed by `.` or `)`, or a
+leading `|` is parsed as block syntax at that position, not as prose. This
+bites hardest inside list items, where the continuation indent is exactly
+where a nested list marker would sit.
+
+Incorrect. The wrap lands so the continuation begins with a `+` marker, and
+the renderer produces a nested bullet reading "grantable flags ...":
+
+```markdown
+- Grants are keyed by tenant (`tenant_type` is personal or organization;
+  + grantable flags control whether a grant can be delegated onward).
+```
+
+Correct. Re-break the line by pulling the previous word down, so the
+continuation starts with a plain word:
+
+```markdown
+- Grants are keyed by tenant (`tenant_type` is personal or
+  organization; + grantable flags control whether a grant can be delegated
+  onward).
+```
+
+The alternative repair is pushing the offending token up to end the previous
+line, and the last resort is a backslash escape (`\+ grantable`), which
+renders as a literal `+` but leaves an escape in the source. Prefer the
+re-break.
+
+Long unbreakable tokens use the MD013 escape hatch: the linter only flags a
+line when whitespace occurs past the limit. Give the token its own
+continuation line with nothing after it.
+
+Incorrect. The URL sits mid-line, and the words after it put a space past
+column 80 (the example line below is deliberately over-length, so this file
+fences it behind an inline markdownlint disable):
+
+<!-- markdownlint-disable MD013 -->
+
+```markdown
+The upstream discussion at https://github.com/example/repo/issues/4821#issuecomment-99182 settled the format.
+```
+
+<!-- markdownlint-enable MD013 -->
+
+Correct. The URL starts its own line and ends it; the line exceeds 80 but
+carries no whitespace past the limit, so MD013 stays quiet:
+
+```markdown
+The upstream discussion at
+https://github.com/example/repo/issues/4821#issuecomment-99182
+settled the format.
+```
+
+Never wrap table rows, code fence contents, headings, or link reference
+definitions. When one of those must exceed 80 under a default MD013 config,
+the fix is lint configuration (`tables: false`, `code_blocks: false`,
+`heading_line_length`), not reflowing the construct.
+
 ## Justified text
 
 Markdown has no native text justification. Justification requires HTML and is
@@ -228,8 +291,8 @@ back-links. Definitions conventionally live at the bottom of the document but ma
 appear anywhere.
 
 Portability: footnotes are a GFM extension. They render on GitHub and in pandoc.
-Core CommonMark renderers without the extension show the literal `[^src]` text, so
-footnotes are a "know your target" feature.
+Core CommonMark renderers without the extension show the literal `[^src]` text,
+so footnotes are a "know your target" feature.
 
 ## Code fences and language tags
 

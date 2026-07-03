@@ -1,6 +1,6 @@
 ---
 name: shruggie-markdown
-description: Encodes the ShruggieTech house style for authoring Markdown documents (single-H1 structure, the labeled front-matter block, heading spacing, automatic anchors and manual tables of contents, prose-first density, GFM footnotes, language-tagged code fences, base64 image embedding, and Mermaid or SVG diagrams). Applies whenever Claude is writing or refactoring a Markdown document to house style. Trigger on phrasings like "write this as a Markdown doc to house style", "format this README", "add a TOC", "embed this image in the Markdown", or "make a Mermaid diagram for this". This skill is the Markdown authoring house style, not the shruggie-markdown software product; do not fire it for software, build, packaging, or release requests about that product.
+description: Encodes the ShruggieTech house style for authoring Markdown documents (single-H1 structure, the labeled front-matter block, heading spacing, automatic anchors and manual tables of contents, prose-first density, 80-column hard wrapping with wrap-safe line breaks, GFM footnotes, language-tagged code fences, base64 image embedding, and Mermaid or SVG diagrams). Applies whenever Claude is writing or refactoring a Markdown document to house style. Trigger on phrasings like "write this as a Markdown doc to house style", "format this README", "add a TOC", "embed this image in the Markdown", or "make a Mermaid diagram for this". This skill is the Markdown authoring house style, not the shruggie-markdown software product; do not fire it for software, build, packaging, or release requests about that product.
 disable-model-invocation: false
 user-invocable: true
 when_to_use: Use when writing or cleaning up any Markdown document (README, report, spec, sprint plan, case study, agent context file) to the ShruggieTech standard, or when the operator says "fix the headings", "add footnotes", "make this self-contained", or "turn this into a Mermaid diagram". Do not use for the shruggie-markdown software product or for non-Markdown output.
@@ -17,8 +17,8 @@ only when you need them.
 
 This skill is named identically to an unrelated ShruggieTech software product, also
 called `shruggie-markdown`. The skill is about authoring Markdown documents to house
-style. It is not the software. Do not invoke it for software, build, packaging, or
-release work about that product.
+style. It is not the software. Do not invoke it for software, build, packaging,
+or release work about that product.
 
 ## When to Use
 
@@ -95,12 +95,46 @@ Paragraphs are encouraged. Bullets are for genuinely enumerable items (options,
 steps, parameters, rules). Explanatory and narrative content is prose, not a list
 of fragments. This is a stated house preference.
 
+### Line length
+
+Hard-wrap prose at 80 characters (the markdownlint MD013 default). This covers
+paragraphs, list items, and blockquotes. A wrapped list item indents its
+continuation lines to the item's content column (two spaces after the `-`
+marker, three after `1.`) so the lines stay attached to the item.
+
+Long unbreakable tokens (URLs, file paths, long inline-code literals) get the
+MD013 escape hatch: the linter does not flag a line when no whitespace occurs
+past the limit. Break before the token so it starts its own continuation line
+and nothing follows it; never let a long token sit mid-line with words after
+it, because the trailing space past column 80 is what gets flagged.
+
+Do not wrap table rows, code fence contents, headings, or link reference
+definitions. Reflowing those changes meaning or breaks rendering.
+
+Halt-gate: when a table row, fence line, or heading necessarily exceeds 80 and
+the operator lints with default MD013, surface that the lint config needs
+exceptions (`tables: false`, `code_blocks: false`, or a raised
+`heading_line_length`). Do not mangle those constructs to dodge the linter.
+
+### Wrap-safe continuation lines
+
+A continuation line produced by hard-wrapping must never begin with a
+character run that Markdown parses as block syntax at that position: `-`,
+`+`, or `*` followed by a space, `>`, `#`, a digit run followed by `.` or `)`,
+a leading `|`, or four or more spaces beyond the required continuation
+indent. Inside a list item the continuation indent makes such a token look
+like a nested list marker or block, and it renders as one. Fix by re-breaking
+the line: pull the previous word down or push the offending token up. As a
+last resort, backslash-escape the marker (`\+`). Never leave a raw marker at
+the start of a wrapped line. Worked example in
+`assets/authoring-reference.md`.
+
 ### Anchors, links, and tables of contents
 
 GitHub auto-generates an anchor slug for every heading: lowercase, strip every
 character that is not a letter, digit, space, or hyphen, then turn spaces into
-hyphens (duplicates get `-1`, `-2`). An internal link is `[text](#slug)`. There is
-no automatic in-body TOC; a TOC is a manual list of `[Heading](#slug)` links.
+hyphens (duplicates get `-1`, `-2`). An internal link is `[text](#slug)`. There
+is no automatic in-body TOC; a TOC is a manual list of `[Heading](#slug)` links.
 Explicit `<a id>` anchors are HTML, audience-gated, and usually unnecessary; for
 GitHub-targeted documents rely on the automatic slug and do not hand-roll anchors.
 
@@ -156,12 +190,14 @@ skill body itself is pure Markdown.
 
 ## Scripts
 
-Generate base64 data-URI image definitions with the bundled scripts rather than by
-hand. Both emit the same `[label]: data:<mime>;base64,<blob>` definition for the
-bottom of the file and the same `![alt][label]` in-body usage hint.
+Generate base64 data-URI image definitions with the bundled scripts rather than
+by hand. Both emit the same `[label]: data:<mime>;base64,<blob>` definition for
+the bottom of the file and the same `![alt][label]` in-body usage hint.
 
-- Bash: `${CLAUDE_SKILL_DIR}/scripts/encode-image-datauri.sh -i <image> [-l label] [-a alt] [-o file]`
-- PowerShell: `${CLAUDE_SKILL_DIR}/scripts/Encode-ImageDataUri.ps1 -Path <image> [-Label label] [-Alt alt] [-OutFile file]`
+- Bash: `${CLAUDE_SKILL_DIR}/scripts/encode-image-datauri.sh`
+  `-i <image> [-l label] [-a alt] [-o file]`
+- PowerShell: `${CLAUDE_SKILL_DIR}/scripts/Encode-ImageDataUri.ps1`
+  `-Path <image> [-Label label] [-Alt alt] [-OutFile file]`
 
 ## Output hygiene
 
@@ -172,15 +208,18 @@ Every Markdown file the skill writes complies with `CONVENTIONS.md`:
   newline.
 - Zero em-dashes and zero en-dashes anywhere, including inside code comments and
   `alt` text. Use parentheses, commas, or standard hyphens.
+- Prose hard-wrapped at 80 columns with wrap-safe continuation lines (no
+  wrapped line starts with a block-syntax marker).
 - No AI rhetorical tropes, especially the "not just X, it's Y" contrast.
 - Every fenced code block declares a language.
 - For plans, sprint documents, and update logs, sequence sessions chronologically.
 
 ## Additional resources
 
-- `assets/authoring-reference.md`: long-form reference with worked examples for the
-  single H1, front-matter block, heading spacing, horizontal-rule gotchas, anchors
-  and TOCs, prose density, justified text, footnotes, and code fences.
+- `assets/authoring-reference.md`: long-form reference with worked examples
+  for the single H1, front-matter block, heading spacing, horizontal-rule
+  gotchas, anchors and TOCs, prose density, line length and wrap-safe
+  continuations, justified text, footnotes, and code fences.
 - `assets/images-and-diagrams.md`: base64 data-URI image embedding, Mermaid, SVG
   (committed file and inline), the script invocations, and the no-ASCII rule.
 - `assets/renderer-compatibility.md`: the "what renders where" matrix across
