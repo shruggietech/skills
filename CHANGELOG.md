@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-07-05
+
 ### Fixed
 
 - `shruggie-graph-memory`: rewritten to the live ShruggieGraph tool surface. The shipped skill
@@ -135,7 +137,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.6.0...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/shruggietech/skills/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/shruggietech/skills/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/shruggietech/skills/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/shruggietech/skills/compare/v1.3.0...v1.4.0
