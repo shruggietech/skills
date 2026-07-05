@@ -12,7 +12,7 @@ When the ShruggieGraph MCP tools are connected, this skill has you write durable
 notes with the `create_note` tool (each note becomes a cited source with an audit trail) and
 recall it with `search_knowledge`. The ShruggieGraph backend decides all access; this skill never
 makes a permission decision of its own, it only chooses what is worth remembering and writes it to
-the workspace the user has configured.
+the memory the user's connection is linked to.
 
 ## When to Use
 
@@ -42,16 +42,13 @@ when a durable fact appears, save it; when the user asks what they know, search 
 
 ### Knowing where to write
 
-`create_note` requires an explicit `workspace_id`. Use the ShruggieGraph workspace the user has
-configured for memory (their shared or personal workspace UUID). Resolve it in this order:
-
-1. Use the workspace id the user has given you for ShruggieGraph in this session or in the skill
-   setup (see `README.md`).
-2. If you do not have one, ask the user once for their ShruggieGraph workspace id, then reuse it
-   for the rest of the session.
-
-Never guess a workspace id, and never write to a workspace the user did not name. A token is
-scoped to its workspaces, so a wrong id simply fails; ask rather than retry blindly.
+There is nothing to configure and no id to ask for. The user's connection (an `sgmcp_` token or
+an OAuth-connected client) is linked to one or more memories when it is created, and `create_note`
+writes to the only linked memory by default. Only if the user has linked several memories to one
+connection does targeting matter: pass the optional `context` string describing which memory they
+mean (for example their personal memory versus a shared group memory). Never invent a `context`
+value; if a write fails on targeting, ask the user which memory they intend rather than retrying
+blindly.
 
 ### What to capture
 
@@ -112,9 +109,9 @@ it does automatic certs and we don't want to manage renewals by hand.
 **Expected output:**
 
 ```
-Got it. (calls create_note with workspace_id = <configured>, title = "TLS termination: Caddy
-on the alpha VM", content = "Decision: use Caddy (not nginx) for TLS on the alpha VM. Reason:
-automatic certificate issuance and renewal, so no manual renewal management.")
+Got it. (calls create_note with title = "TLS termination: Caddy on the alpha VM", content =
+"Decision: use Caddy (not nginx) for TLS on the alpha VM. Reason: automatic certificate
+issuance and renewal, so no manual renewal management.")
 
 Saved to ShruggieGraph: "TLS termination: Caddy on the alpha VM".
 ```
@@ -153,6 +150,6 @@ ugh, long day. anyway what's 12 * 7?
 ## Additional Resources
 
 - [assets/capture-reference.md](assets/capture-reference.md) - the `create_note` and
-  `search_knowledge` input shapes, scopes, the normal-sensitivity cap, and workspace-id setup.
-- `README.md` - human-facing setup: connecting Claude Desktop to ShruggieGraph, minting a token,
-  and configuring the workspace id.
+  `search_knowledge` input shapes, scopes, the normal-sensitivity cap, and memory targeting.
+- `README.md` - human-facing setup: connecting claude.ai or Claude Desktop to ShruggieGraph and
+  minting a token.

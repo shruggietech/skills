@@ -11,38 +11,40 @@ reference in `assets/capture-reference.md`.
 
 ## What it does
 
-- Writes durable facts to a ShruggieGraph workspace with the `create_note` MCP tool. Each note
+- Writes durable facts to your ShruggieGraph memory with the `create_note` MCP tool. Each note
   becomes a cited source with an audit trail; the backend enforces all access.
 - Recalls them with `search_knowledge`, which returns permission-filtered, cited context.
 - Stays quiet on trivia, transient chatter, and unrequested secrets.
 
-The skill makes no permission decisions. ShruggieGraph is the sole authority for what a token may
-read or write.
+The skill makes no permission decisions. ShruggieGraph is the sole authority for what a
+connection may read or write, and the connection itself determines which memory notes land in;
+there is nothing to configure in the skill.
 
 ## Prerequisites
 
-- A ShruggieGraph account and a workspace to write into.
-- The ShruggieGraph MCP tools connected to your Claude client (see "Connect Claude Desktop").
+- A ShruggieGraph account.
+- The ShruggieGraph MCP tools connected to your Claude client (either path below). The console's
+  **Connect** guide (linked from the Connected apps page) documents both paths end to end.
 
-## One-time setup
+## Connect claude.ai (web)
 
-### 1. Mint a token (ShruggieGraph console)
+Add a custom connector in claude.ai with the URL `https://graph.shruggie.tech/mcp`. claude.ai
+discovers the ShruggieGraph OAuth server, registers, and sends you to the console consent page,
+where you sign in, pick which memory to link, and approve the scopes. Disconnecting in claude.ai
+revokes the connection server-side; you can also sever any connection yourself on the console's
+**Connected apps** page.
 
-1. Sign in to the ShruggieGraph console.
-2. If you do not yet have a shared/team space, create an organization (this also creates a first
-   workspace and makes you Owner). Note the **workspace id** shown.
-3. Switch the scope selector to that organization's tenant.
-4. Open **MCP Tokens** and create a token:
-   - Client name: `Claude Desktop` (or your client).
-   - Scopes: `mcp:note.create`, `mcp:search`, `mcp:read`.
-   - Workspace links: tick the workspace you want memory written to.
-5. Copy the `sgmcp_...` secret (shown once).
-
-### 2. Connect Claude Desktop
+## Connect Claude Desktop
 
 ShruggieGraph's MCP endpoint is request/response JSON-RPC, so Claude Desktop connects through the
-bundled `mcp-stdio` adapter from the ShruggieGraph CLI (which speaks HTTPS). In
-`claude_desktop_config.json`:
+bundled `mcp-stdio` adapter from the ShruggieGraph CLI (which speaks HTTPS).
+
+1. In the console, open **Connected apps** (in the account menu) and create a token:
+   - Client name: `Claude Desktop` (or your client).
+   - Scopes: `mcp:note.create`, `mcp:search`, `mcp:read`.
+   - Memory: pick the memory this connection writes to and reads from.
+2. Copy the `sgmcp_...` secret (shown once).
+3. In `claude_desktop_config.json`:
 
 ```json
 {
@@ -60,11 +62,12 @@ For a more secure setup that keeps the secret out of the config file, mint the t
 flag `--store-account <name>` (which stores it in the OS keyring), then replace the `env` block
 with `"--account", "<name>"` in `args`.
 
-### 3. Tell the skill your workspace id
+## Where notes land
 
-`create_note` needs an explicit workspace id, and there is no way to list a token's workspaces from
-the client. So state your workspace id to Claude once per session (for example, "my ShruggieGraph
-workspace is <uuid>"), and the skill reuses it. If you do not, the skill asks once before writing.
+The connection carries the targeting: notes are written to the memory you linked at consent or
+token-mint time, and searches read from it. If you link several memories to one connection, the
+skill passes an optional `context` describing which one you mean. There is no workspace id or any
+other identifier to configure.
 
 ## Install
 
@@ -76,7 +79,7 @@ Desktop, or symlink for Claude Code).
 This skill sets `disable-model-invocation: false` on purpose. Automatic capture during ordinary
 conversation is the whole point, so Claude must be able to pick the skill up by context rather than
 waiting for an explicit `/shruggie-graph-memory` command. The actual write is performed by the
-`create_note` MCP tool, which you enabled by connecting the connector and minting a
-`mcp:note.create` token, and which the ShruggieGraph backend independently authorizes. This is a
-deliberate departure from the usual "side-effecting skills are explicit-invocation only" guideline,
-recorded here so it is not mistaken for an oversight.
+`create_note` MCP tool, which you enabled by connecting the connector with the `mcp:note.create`
+scope, and which the ShruggieGraph backend independently authorizes. This is a deliberate
+departure from the usual "side-effecting skills are explicit-invocation only" guideline, recorded
+here so it is not mistaken for an oversight.
