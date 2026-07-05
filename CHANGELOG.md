@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `shruggie-graph-memory`: `assets/capture-reference.md` completed to the full live tool surface.
+  It documented only `create_note` and `search_knowledge`; it now also lists the three read tools
+  (`get_source`, `get_guideline_context`, `get_project_context`) and adds `mcp:source.read` to the
+  scopes, matching the four scopes the server advertises (ShruggieGraph S069).
+
 ## [1.7.0] - 2026-07-05
 
 ### Fixed

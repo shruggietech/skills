@@ -1,9 +1,11 @@
 # Capture reference: ShruggieGraph MCP tools
 
-Reference for the two ShruggieGraph MCP tools this skill uses. Read this when you need the exact
-input shape, the scopes a token must carry, or how memory targeting and sensitivity work. The
-ShruggieGraph backend is the sole authority for access; everything below describes how to call it
-correctly, not how to bypass it.
+Reference for the ShruggieGraph MCP tools. This skill uses `create_note` and `search_knowledge`;
+the three read tools below (`get_source`, `get_guideline_context`, `get_project_context`) are also
+on the connection and documented here for completeness and to match the live server surface. Read
+this when you need the exact input shape, the scopes a token must carry, or how memory targeting
+and sensitivity work. The ShruggieGraph backend is the sole authority for access; everything below
+describes how to call it correctly, not how to bypass it.
 
 ## `create_note` (write)
 
@@ -38,6 +40,20 @@ Inputs:
 Requires `mcp:search` or `mcp:read`. Results are filtered to what the connection is authorized
 for; content from other people's memories is never returned.
 
+## Read tools (source and context)
+
+These support recall and are available on the connection; the skill reaches for them when a
+`search_knowledge` result needs to be followed to its source or when the user asks for guideline or
+project context directly.
+
+- `get_source` (read): retrieve a source's metadata and its allowed text or spans, including source
+  availability state. Input: `source_id` (string, required). Requires `mcp:source.read`.
+- `get_guideline_context` (read): return accepted guideline rules for the connected memory. Inputs:
+  `artifact_type` (string, optional), `context` (string, optional). No required input. Requires
+  read access.
+- `get_project_context` (read): return source-backed context for the connected memory. Inputs:
+  `query` (string, required), `context` (string, optional). Requires read access.
+
 ## Memory targeting
 
 There is no id to resolve and nothing to ask the user for. The credential itself carries the
@@ -55,7 +71,8 @@ consent granted at connect time, should carry:
 
 - `mcp:note.create` (to write notes)
 - `mcp:search` and `mcp:read` (to recall)
+- `mcp:source.read` (to follow a result to its source with `get_source`)
 
-A connection's effective authority is the live intersection of its scopes, its linked memories,
+These four are the scopes the server advertises. A connection's effective authority is the live intersection of its scopes, its linked memories,
 and the owner's current permissions. If a write or search starts failing, the connection may have
 been revoked or its permissions changed; surface the error rather than retrying blindly.
