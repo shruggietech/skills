@@ -20,7 +20,9 @@ Inputs:
   stricter values are rejected, so do not put secrets or sensitive personal data in a note.
 - `visibility` (string, optional): leave default unless the user asks otherwise.
 - `context` (string, optional): which linked memory to write to, when the connection is linked
-  to more than one. Omit it when only one memory is linked (the default targets it).
+  to more than one. Omit it when only one memory is linked (the default targets it). A `context`
+  that is malformed or names a memory the connection is not linked to is rejected, never silently
+  written to the default memory.
 
 Requires the connection to carry the `mcp:note.create` scope. A write without the scope, or to a
 memory the connection is not linked to, fails closed.
@@ -61,8 +63,9 @@ targeting: an `sgmcp_` token or an OAuth connection is linked to one or more mem
 minted or consented, and every tool defaults to the only linked memory. Only when the user has
 linked several memories to one connection does the optional `context` string matter; describe
 which memory you mean (for example the user's personal memory versus a shared group memory) and
-the backend resolves it. Never invent a `context` value; if a call fails on targeting, ask the
-user which memory they intend.
+the backend resolves it. Never invent a `context` value: one that is malformed is refused as bad
+input, and one that does not match a linked memory is denied, so a targeting mistake never lands in
+the wrong memory. If a call fails on targeting, ask the user which memory they intend.
 
 ## Scopes a memory connection should carry
 
