@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-07-06
+
 ### Fixed
 
 - `shruggie-graph-memory`: `assets/capture-reference.md` now states that a `context` which is
@@ -154,7 +156,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.7.1...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.7.2...HEAD
+[1.7.2]: https://github.com/shruggietech/skills/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/shruggietech/skills/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/shruggietech/skills/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/shruggietech/skills/compare/v1.5.0...v1.6.0
