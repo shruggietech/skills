@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `shruggie-speckit`: new skill that runs a spec-kit feature slice under autopilot. On one verbal
+  kickoff ("autopilot the next slice", "kick off S09") it drives the project's installed
+  `/speckit-*` commands end to end (specify, clarify, checklist, plan, tasks, analyze, implement,
+  verify, commit), makes routine decisions itself and records them, and halts exactly once before
+  the push with a review breakdown. Strictly generic: it discovers the project's constitution,
+  CI-parity commands, and branch model at runtime rather than assuming a toolchain, and it is an
+  orchestration layer that never ships or fakes the spec-kit commands. Bundles a generalized
+  autopilot protocol (v1.0.0, derived from the ShruggieGraph protocol v1.2.0), a condensed
+  spec-kit reference, refresh instructions, and a maintainer update helper (`.ps1` and `.sh`).
+
 ## [1.7.2] - 2026-07-06
 
 ### Fixed
