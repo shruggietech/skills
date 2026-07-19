@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `scripts/release`: GitHub release creation is now the default. `release.ps1` and `release.sh`
+  create the `gh release` (with the per-skill zips and `SHA256SUMS.txt` attached) at the end of
+  every run unless opted out. The legacy `-GhRelease` / `--gh-release` flag is retained as a
+  no-op that reaffirms the default, and a new `-NoGhRelease` / `--no-gh-release` flag skips
+  publishing the release (stopping at the git tag and push); when both are supplied, negation
+  wins. Prevents cutting a tag without an attached, downloadable release artifact.
+
 ## [1.8.0] - 2026-07-19
 
 ### Added

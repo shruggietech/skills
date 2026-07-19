@@ -9,9 +9,10 @@
     section, generates release notes, builds one zip per skill in
     dist\vX.Y.Z\, computes SHA256 sums, commits, tags, and pushes.
 
-    Defaults: patch bump, branch=main, zip artifacts built, push at end.
-    Use -WhatIf to preview without writing anything; preflight still runs
-    so wrong-branch / dirty-tree / tag-exists conditions are caught.
+    Defaults: patch bump, branch=main, zip artifacts built, push at end,
+    and a GitHub release created with the zips attached. Use -WhatIf to
+    preview without writing anything; preflight still runs so wrong-branch
+    / dirty-tree / tag-exists conditions are caught.
 
     Version selection flags (-Major, -Minor, -Patch, -Version) are
     mutually exclusive. With no prior tags, all of them resolve to
@@ -48,9 +49,15 @@
     Skip both git pushes at the end (leaves the commit and tag local).
 
 .PARAMETER GhRelease
-    After pushing, create a GitHub release with `gh release create`.
-    Attaches the zips and SHA256SUMS.txt. Requires `gh` on PATH and an
-    authenticated session.
+    Retained for backward compatibility. Creating a GitHub release is now
+    the default, so this switch is a no-op that simply reaffirms it.
+
+.PARAMETER NoGhRelease
+    Skip creating the GitHub release. By default, after pushing, the script
+    creates a GitHub release with `gh release create`, attaching the zips
+    and SHA256SUMS.txt (requires `gh` on PATH and an authenticated session).
+    Pass this to stop at the git tag and push without publishing a release.
+    If both -GhRelease and -NoGhRelease are given, -NoGhRelease wins.
 
 .PARAMETER WhatIf
     Built-in. Preview every step without performing any writes, commits,
@@ -86,10 +93,9 @@
     reviewed before publishing.
 
 .EXAMPLE
-    .\release.ps1 -GhRelease
+    .\release.ps1 -NoGhRelease
 
-    Cut a patch release and create a GitHub release with the zips
-    attached.
+    Cut a patch release and push, but do not publish a GitHub release.
 
 .NOTES
     See CONTRIBUTING.md "Cutting a Release" for the full release
@@ -107,7 +113,8 @@ param(
     [switch]$Quiet,
     [switch]$NoZip,
     [switch]$NoPush,
-    [switch]$GhRelease
+    [switch]$GhRelease,
+    [switch]$NoGhRelease
 )
 
 Set-StrictMode -Version Latest
@@ -138,6 +145,11 @@ if ($Quiet -and ($VerbosePreference -ne 'SilentlyContinue')) {
 }
 
 $DryRun = [bool]$WhatIfPreference
+
+# GitHub release creation is on by default; -NoGhRelease opts out. The legacy
+# -GhRelease switch is retained for compatibility and simply reaffirms the
+# default. When both are supplied, negation wins.
+$DoGhRelease = -not $NoGhRelease
 
 # -----------------------------------------------------------------------
 # Output helpers
@@ -339,7 +351,7 @@ function Invoke-Preflight {
     }
     Write-Verbose2 'CHANGELOG Unreleased section ok'
 
-    if ($GhRelease) {
+    if ($DoGhRelease) {
         Assert-CommandExists -Name 'gh'
         & gh auth status 2>$null | Out-Null
         if ($LASTEXITCODE -ne 0) {
@@ -724,7 +736,7 @@ function Push-Release {
 function Invoke-GhRelease {
     param([Parameter(Mandatory)][string]$NewVersion)
 
-    if (-not $GhRelease) { return }
+    if (-not $DoGhRelease) { return }
 
     Write-Info 'Creating GitHub release...'
     $tag = "v$NewVersion"

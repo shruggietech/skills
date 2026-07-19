@@ -6,7 +6,8 @@
 # section, generates release notes, builds one zip per skill in
 # dist/vX.Y.Z/, computes SHA256 sums, commits, tags, and pushes.
 #
-# Defaults: patch bump, branch=main, zip artifacts built, push at end.
+# Defaults: patch bump, branch=main, zip artifacts built, pushed, and a
+# GitHub release created at end.
 # Use --dry-run to preview without writing anything.
 
 set -euo pipefail
@@ -28,7 +29,8 @@ VERBOSE=0
 QUIET=0
 NO_ZIP=0
 NO_PUSH=0
-GH_RELEASE=0
+GH_RELEASE=1
+NO_GH_RELEASE=0
 BUMP_FLAG_COUNT=0
 
 usage() {
@@ -67,10 +69,15 @@ Behavior toggles:
                           exclusive with --verbose.
   --no-zip                Skip building per-skill zips.
   --no-push               Skip both git pushes at the end.
-  --gh-release            After pushing, create a GitHub release with
-                          \`gh release create\`. Attaches the zips and
-                          SHA256SUMS.txt. Requires \`gh\` on PATH and
-                          an authenticated session.
+  --gh-release            Retained for compatibility. Creating a GitHub
+                          release is now the default; this flag is a
+                          no-op that reaffirms it.
+  --no-gh-release         Skip creating the GitHub release. By default,
+                          after pushing, the script runs
+                          \`gh release create\`, attaching the zips and
+                          SHA256SUMS.txt (requires \`gh\` on PATH and an
+                          authenticated session). If both --gh-release
+                          and --no-gh-release are given, negation wins.
 
   -h, --help              Show this help and exit.
 
@@ -80,7 +87,7 @@ Examples:
   ./scripts/release.sh --minor
   ./scripts/release.sh --version 2.0.0
   ./scripts/release.sh --major --no-push
-  ./scripts/release.sh --gh-release
+  ./scripts/release.sh --no-gh-release
 EOF
 }
 
@@ -135,10 +142,11 @@ parse_args() {
             -n|--dry-run)  DRY_RUN=1; shift ;;
             -v|--verbose)  VERBOSE=1; shift ;;
             -q|--quiet)    QUIET=1; shift ;;
-            --no-zip)      NO_ZIP=1; shift ;;
-            --no-push)     NO_PUSH=1; shift ;;
-            --gh-release)  GH_RELEASE=1; shift ;;
-            -h|--help)     usage; exit 0 ;;
+            --no-zip)         NO_ZIP=1; shift ;;
+            --no-push)        NO_PUSH=1; shift ;;
+            --gh-release)     GH_RELEASE=1; shift ;;
+            --no-gh-release)  NO_GH_RELEASE=1; shift ;;
+            -h|--help)        usage; exit 0 ;;
             *)
                 printf "error: unknown option: %s\n" "$1" >&2
                 usage >&2
@@ -156,6 +164,12 @@ parse_args() {
         printf "error: --verbose and --quiet are mutually exclusive\n" >&2
         usage >&2
         exit 2
+    fi
+
+    # GitHub release creation is on by default; --no-gh-release opts out and
+    # wins over --gh-release regardless of order.
+    if [[ "$NO_GH_RELEASE" -eq 1 ]]; then
+        GH_RELEASE=0
     fi
 }
 
