@@ -144,6 +144,40 @@ When the natural-language verb that comes to mind is not approved, reach for the
 | `Load` | `Import` |
 | `Change` | `Set` or `Update` |
 
+### Also check for a real command-name collision, not just the verb
+
+An approved verb is necessary but not sufficient. `Write-Log` uses the approved verb `Write` and a
+singular noun, and still tripped PSScriptAnalyzer's `PSAvoidOverwritingBuiltInCmdlets` rule in a
+live editor session, because `PSDesiredStateConfiguration` (a Windows PowerShell 5.1 inbox module)
+already exports a function of that exact name. The fixture is now named `Write-ShruggieLog`.
+
+Getting the verification method right took two attempts. The first version of this document said
+the collision rule only checked cmdlets shipped with the PowerShell engine itself, reasoned from
+memory rather than checked. The next attempt replaced that with a live `Get-Command -Name <Name>
+-All` check, which is more correct in principle but proved unreliable in practice: `Get-Command`
+only sees modules discoverable in the *current* session, and `PSDesiredStateConfiguration` is a
+Windows PowerShell 5.1 module not on PowerShell 7's module path, so on a `pwsh` 7 session, exactly
+the environment this skill targets, that check silently passed a fixture that reproduced the real
+bug. The only verification that actually caught it, on both attempts, was running the real tool:
+
+```powershell
+Invoke-ScriptAnalyzer -ScriptDefinition $scriptText -IncludeRule PSUseApprovedVerbs,PSAvoidOverwritingBuiltInCmdlets
+```
+
+`Invoke-ScriptAnalyzer` consults PSScriptAnalyzer's own bundled, versioned snapshot of inbox and
+common module exports, which is exactly what its live editor diagnostic and CI usage both do too,
+so it is the only check in this document confirmed to match what an operator will actually see.
+Any non-empty result means the candidate name needs to change. `Test-ScriptCompliance.ps1`'s
+advisory compliance scan runs this same call automatically against every declared function in a
+target script when PSScriptAnalyzer is installed, and warns explicitly when it is not rather than
+silently skipping the scan (see "Additional Resources" in `SKILL.md`).
+
+Generic, short nouns (`Log`, `Config`, `Status`, `Data`) are the ones most likely to already be
+claimed. When a fixture or helper's name is generic in this way, prefer a `ShruggieTech`-branded
+or otherwise distinguishing noun (`Write-ShruggieLog`, not `Write-Log`) over the bare generic form,
+even before running the check above; a distinguishing token makes a future collision far less
+likely regardless of what any single snapshot of installed modules currently shows.
+
 ## Help Dispatch
 
 Help is invokable three ways, by deliberate design: the `-Help` switch, its `-h` alias, and the `HelpText` parameter set. All three are wired up on purpose. The redundancy reserves the `-h` namespace exclusively for help invocation. `-h` carries decades of muscle memory as the help flag, and locking it to help prevents any script from quietly repurposing it for something else.
@@ -237,7 +271,7 @@ Scripts that report operator-facing progress use a dedicated logging helper rath
 #_______________________________________________________________________________
 ## Declare Functions
 
-    function Write-Log {
+    function Write-ShruggieLog {
         [CmdletBinding()]
         Param(
             [Parameter(Mandatory=$true,Position=0)]

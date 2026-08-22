@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `shruggie-powershell`: the `Write-Log` logging fixture is renamed to `Write-ShruggieLog`. Despite
+  using an approved verb, `Write-Log` collides with a real, currently-shipped PowerShell command:
+  `PSDesiredStateConfiguration` (a Windows PowerShell 5.1 inbox module) already exports a function
+  of that exact name, which trips PSScriptAnalyzer's `PSAvoidOverwritingBuiltInCmdlets` rule in a
+  live editor session. The v1.10.0 fix for this skill's naming policy added an advisory
+  `Get-Command -All`-based collision check to `Test-ScriptCompliance.ps1`, but that check is
+  unreliable on the `pwsh` 7 sessions this skill targets: `Get-Command` only sees modules
+  discoverable in the current session, and the inbox DSC module is not on PowerShell 7's module
+  path, so it silently passed a fixture that reproduced the real bug. The check is replaced with
+  one that shells out to `Invoke-ScriptAnalyzer` (`PSUseApprovedVerbs` and
+  `PSAvoidOverwritingBuiltInCmdlets`), the same tool and rules an operator's editor actually runs,
+  with a new `-SkipCollisionCheck` opt-out and an explicit WARN when PSScriptAnalyzer is not
+  installed rather than a silent skip. `SKILL.md` and `assets/powershell-conventions.md` are
+  corrected to recommend `Invoke-ScriptAnalyzer` over `Get-Command` for verifying a candidate name.
+
 ## [1.10.0] - 2026-08-22
 
 ### Added

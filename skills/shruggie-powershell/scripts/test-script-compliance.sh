@@ -19,8 +19,10 @@
 # best-effort scan of possible leaked PII: a Windows or Unix/macOS
 # home-directory path with a captured username segment, or an
 # email-address-shaped string. The PowerShell twin additionally warns on
-# function names using a verb outside PowerShell's approved-verb list; that
-# check needs a live PowerShell session (Get-Verb) and has no twin here.
+# function names using a verb outside PowerShell's approved-verb list, and on
+# function names that already collide with an existing command from an
+# inbox or installed module; both checks need a live PowerShell session
+# (Get-Verb, Get-Command) and have no twin here.
 #
 # Exit codes: 0 every check passed, 1 at least one check failed, 2 the target
 # file could not be read. The advisory WARN lines never change the exit code.
@@ -41,7 +43,7 @@ SKIP_PII=0
 TARGET=""
 
 print_help() {
-    sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 while [ $# -gt 0 ]; do
