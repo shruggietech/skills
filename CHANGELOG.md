@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-08-22
+
 ### Added
 
 - `shruggie-bash`: new skill for authoring and refactoring Bash (`.sh`) scripts to the ShruggieTech
@@ -288,7 +290,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.10.1...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/shruggietech/skills/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/shruggietech/skills/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/shruggietech/skills/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/shruggietech/skills/compare/v1.8.3...v1.9.0
