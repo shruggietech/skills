@@ -22,6 +22,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   with a new `-SkipCollisionCheck` opt-out and an explicit WARN when PSScriptAnalyzer is not
   installed rather than a silent skip. `SKILL.md` and `assets/powershell-conventions.md` are
   corrected to recommend `Invoke-ScriptAnalyzer` over `Get-Command` for verifying a candidate name.
+- `scripts/release.ps1`: `Get-LatestSemverTag` sorted tags by an `[int[]]` array-valued property,
+  which `Sort-Object`'s default comparer does not compare element by element, so it silently fell
+  back to something other than numeric ordering once any version segment reached double digits
+  (`v1.10.0` sorted behind `v1.9.0`, so a `-Patch`/`-Minor`/`-Major` cut from that state computed
+  the wrong next version). Sorts by `[System.Version]` instead, which compares major/minor/build
+  correctly. `release.sh`'s `sort -V` was never affected.
 
 ## [1.10.0] - 2026-08-22
 

@@ -239,11 +239,14 @@ function Get-LatestSemverTag {
     if ($tags.Count -eq 0) { return $null }
 
     # Sort by version segments (numeric, ascending) and pick the highest.
+    # [version] (not a raw [int[]] array) is the sort key: Sort-Object's
+    # default comparer does not compare array-valued properties element by
+    # element, so an [int[]] key silently fell back to something other than
+    # numeric ordering once any segment reached double digits (v1.10.0
+    # sorted as "latest" behind v1.9.0). [System.Version] implements
+    # IComparable correctly for major.minor.build.
     $sorted = @($tags | Sort-Object -Property @{
-        Expression = {
-            $parts = ($_ -replace '^v', '') -split '\.'
-            [int[]]@($parts[0], $parts[1], $parts[2])
-        }
+        Expression = { [version]($_ -replace '^v', '') }
     })
     return $sorted[$sorted.Count - 1]
 }
