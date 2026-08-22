@@ -1,6 +1,7 @@
 ---
 name: shruggie-graph-memory
-description: Automatically capture durable knowledge from an ordinary conversation into ShruggieGraph (a permission-scoped, source-backed AI memory) by calling its create_note MCP tool, and recall it later with search_knowledge. Use whenever the ShruggieGraph MCP tools are connected and the conversation surfaces a durable, reusable fact worth keeping across sessions and AI providers (a decision, preference, commitment, deadline, or person/project/org detail). Trigger on phrasings like "remember this", "save that to my memory", "note that for later", "what do I know about X", "check my memory for", and also proactively whenever a lasting fact appears that the user will want again. Skip trivia, transient chit-chat, secrets the user has not asked to store, and any session where the ShruggieGraph tools are not connected.
+description: Automatically capture durable knowledge from an ordinary conversation into ShruggieGraph (a permission-scoped, source-backed AI memory) with its create_note MCP tool, and proactively recall it with search_knowledge. Use whenever the ShruggieGraph MCP tools are connected: store any durable, reusable fact worth keeping across sessions and AI providers (a decision, preference, commitment, deadline, or person/project/org detail), and probe the graph on your own for relevant context whenever the conversation opens a new topic, names a person/project/organization, or asks something the user's stored memory could answer. Also trigger on phrasings like "remember this", "save that to my memory", "what do I know about X", "check my memory for". Always store what is durable; the only reason to skip a write is an explicit user instruction not to save. Skip only trivia and transient chit-chat, and any session where the ShruggieGraph tools are not connected.
+icon: icon.png
 disable-model-invocation: false
 ---
 
@@ -10,9 +11,10 @@ Turn an ordinary working conversation into durable, retrievable memory in Shrugg
 permission-scoped, source-backed AI memory backend the user owns and carries across AI providers.
 When the ShruggieGraph MCP tools are connected, this skill has you write durable knowledge as
 notes with the `create_note` tool (each note becomes a cited source with an audit trail) and
-recall it with `search_knowledge`. The ShruggieGraph backend decides all access; this skill never
-makes a permission decision of its own, it only chooses what is worth remembering and writes it to
-the memory the user's connection is linked to.
+recall it with `search_knowledge`, probing the graph on your own rather than waiting to be asked.
+The ShruggieGraph backend decides all access; this skill never makes a permission decision of its
+own. It only chooses what is worth remembering, writes it to the memory the user's connection is
+linked to, and surfaces what the user already knows.
 
 ## When to Use
 
@@ -25,20 +27,22 @@ Invoke this skill when:
 - A conversation surfaces a durable, reusable fact even without an explicit save instruction: a
   decision, a stated preference, a commitment or deadline, a stable detail about a person,
   project, organization, or tool, or a recurring theme the user will want again later.
+- The conversation opens a new topic, names a person, project, or organization, or asks a
+  question the user's own stored memory could answer. Probe the graph for relevant context before
+  answering (see Recall).
 
 Do not invoke this skill when:
 
-- The ShruggieGraph MCP tools (`create_note`, `search_knowledge`) are not connected in the
-  session. Without them there is nothing to write to; do not pretend to save anything.
+- The ShruggieGraph MCP tools are not connected in the session. Without them there is nothing to
+  write to or read from; do not pretend to save or recall anything.
 - The content is transient chit-chat, one-off scratch work, or trivia with no lasting value.
-- The content is a secret, credential, or sensitive personal detail the user has not asked you to
-  store. Ask first before writing anything sensitive.
 - The user is working inside a different memory or note system; defer to the tool they named.
 
 ## Instructions
 
-Treat capture as a steady background habit, not a feature the user has to trigger. The default is:
-when a durable fact appears, save it; when the user asks what they know, search first.
+Treat capture and recall as steady background habits, not features the user has to trigger. The
+defaults are: when a durable fact appears, save it; when a topic or question could touch stored
+context, search first.
 
 ### Knowing where to write
 
@@ -54,7 +58,7 @@ blindly.
 
 Write a note when the conversation produces something the user will plausibly want weeks later:
 
-- Decisions and their rationale ("we picked Postgres over Mongo because ...").
+- Decisions and their rationale (for example "we picked Postgres over Mongo because ...").
 - Stated preferences and conventions ("I always want commit messages in imperative mood").
 - Commitments, deadlines, and plans with dates (convert relative dates to absolute).
 - Stable facts about people, projects, organizations, and tools.
@@ -62,35 +66,120 @@ Write a note when the conversation produces something the user will plausibly wa
 
 Keep each note self-contained: a clear `title` and a `content` body that will still make sense out
 of context, with enough detail that a future reader does not need this conversation to understand
-it. One idea per note. Prefer the user's own wording for anything where phrasing matters.
+it. One idea per note. Prefer the user's own wording for anything where phrasing matters. When a
+fact came from someone other than the user, set `attributed_to`, and you may record your provider
+and model with `recorded_by_provider` and `recorded_by_model`. These are self-declared, not
+independently verified by the server, so accuracy matters: `recorded_by_provider` is a short
+lowercase slug (`anthropic`, `openai`, `google`), never a display name; `recorded_by_model` is your
+exact model identifier as you know it (`claude-opus-5`, `gpt-5`), not a generic family name. The
+console shows both to the end user as a self-declaration, so an inaccurate value is a real, visible
+inaccuracy, not a harmless internal detail.
 
-### What not to capture
+### Attaching context about the material: elicit author, date, and what it is
 
-- Trivia, small talk, and ephemeral state ("what time is it", "thanks").
-- Content already saved this session or clearly already in memory (search first; see below).
-- Secrets, credentials, and sensitive personal data unless the user asked you to store them.
-  `create_note` only accepts normal-sensitivity notes, so stricter material does not belong here.
+The person adding a source almost always knows things the raw bytes do not carry — **who wrote it**,
+**when it originated**, and **what it is**. That context is cheapest to capture at write time, and
+without it the pipeline defaults authorship to the account owner and dates to now, which silently
+produces wrong derived knowledge. The canonical failure: a letter written by the user's father,
+saved with no context, lets the graph infer the *user* wrote it and has a child by their own name.
 
-### Avoiding duplicates
+So make capturing context a normal part of writing, not an afterthought. Both `create_note` and
+`upload_source` take three optional declared-context fields:
 
-Before writing a fact you suspect may already exist, run `search_knowledge` for it. If a close
-match comes back, do not create a near-duplicate; note the overlap to the user instead. Batch
-several related facts from one exchange into a small number of clear notes rather than many
-fragments.
+- `author` — who authored or originated the material, when that is someone other than the account
+  owner. This is distinct from `attributed_to`; set `author` so the derived knowledge attributes to
+  that person.
+- `date_of_origin` — when the material was written or created, when that differs from now. A fuzzy
+  value is fine and encouraged over nothing ("circa 1998", "1998", "spring 2019"); it is stored
+  verbatim as a hint. Never invent a precise date the user did not give.
+- `about` — a short free-form description of what the material is, to frame the extraction.
 
-### Recall
+Set each field whenever it is knowable — infer it from what the user just told you ("here's a letter
+my dad wrote me in 1998" gives you author, date, and about at once), or ask one brief question when
+the material clearly has an author or origin date you do not know. All three are optional and none
+blocks the write: when the context is genuinely unknown, omit the field rather than guessing, and
+capture anyway. The aim is to fill these on nearly every addition where the context is knowable.
 
-When the user asks what they know, or when a question would be answered by their own memory, call
-`search_knowledge` with a focused query and answer from what it returns. ShruggieGraph returns
-permission-filtered, cited context and does not generate answers itself; you do the reasoning over
-the returned context and cite the notes you used. Never imply a fact is stored if the search did
-not return it.
+### Storing sensitive material: always store, never self-classify
+
+Perceived sensitivity never stops a write. If a durable fact appears, save it, whether or not it
+feels personal or sensitive. This is the core promise of a portable memory: it captures what is
+going on so the user can rely on it later.
+
+**Never set `sensitive: true` on your own judgment.** Sensitivity is not something you perceive,
+infer, or decide — a topic reading as personal, financial, medical, legal, or otherwise delicate
+is never on its own a reason to flag it. Default every write to non-sensitive (omit the flag). Set
+`sensitive: true` only when the user explicitly and specifically tells you to mark *that* item —
+for example "mark this sensitive", "keep this one private", "this is confidential". Their explicit
+instruction is the only trigger; absent it, the flag stays off no matter how the content reads, and
+you never ask "should this be sensitive?" to prompt one.
+
+The flag restricts the note's sharing and visibility only (sensitive records are excluded from
+cross-user and cross-tenant sharing). It never changes whether a note is stored and never affects
+which provider may process it — so there is no protective reason to set it yourself. When in doubt,
+leave it off; the user can always mark a record sensitive later.
+
+The one and only reason to withhold a write is an explicit user instruction not to save a
+specific thing ("don't save this", "keep that out of my memory"). Honor that instruction, and say
+plainly that you did not store it so the omission is visible. Do not generalize such an
+instruction into a standing rule, and never infer one from the mere feeling that a topic is
+sensitive.
+
+### Duplicates are the backend's job — never gate a write on them
+
+Do not search "to check for duplicates," and never withhold a fact because it might already be
+stored. Converging duplicates is the backend's job, not yours: ShruggieGraph runs entity
+resolution, relationship collapse, and claim de-duplication over everything ingested. Some of that
+happens as the write lands, and some of it runs as a recurring background pass on a schedule the
+operator sets, so a duplicate can sit in the graph until that pass next runs rather than being
+folded together the moment you write it. That is expected and it is fine. Do not wait for it, do
+not check on it, and do not describe a convergence deadline to the user — there is no promised one.
+A note that restates something already known is cheap and safe, and a second
+independent mention only strengthens the record. The cost of writing a duplicate is near zero and
+temporary; the cost of skipping a real fact is a permanent gap in the memory. So when a durable fact appears, write it — do not skip it because it
+feels familiar, and **never treat having _searched_ as having _captured_**. Searching is for
+recall (answering the user); it is not a step in, or a substitute for, a write.
+
+Still write *good* notes: keep one idea per note, and batch several related facts from one exchange
+into a small number of clear, self-contained notes rather than many fragments. That is about note
+quality, not about holding anything back — when in doubt, write.
+
+### Uploading whole files
+
+When the user hands you a file to remember (a document, image, PDF, or text) rather than a fact to
+paraphrase, use `upload_source` so the whole original is stored and enters ingestion. Provide the
+bytes base64-encoded in `data_base64`, and optionally a short `note` of what you derived. The same
+`sensitive` rule applies: upload it, and set the flag only when the user has explicitly asked you to
+mark that file. You do not judge whether a file is sensitive, here or anywhere else.
+
+### Recall: probe the graph on your own
+
+Recall is a default reflex, not an on-request action. Whenever the conversation could touch
+something the user has stored, check the graph before answering from your own guesswork. Concrete
+triggers:
+
+- A new topic opens, or the user shifts to a subject you have not searched this session.
+- A specific person, project, organization, tool, or other named entity is mentioned.
+- The user asks a question their own stored context could answer ("what did we decide about ...",
+  "when is ...", "how do I usually ...").
+
+On a trigger, call `search_knowledge` with a focused query; the results carry the span text you
+reason over. Use `get_source` when you need a source's metadata or availability state, not to widen
+a span (it returns metadata only), and `get_project_context` for broader source-backed context on
+the connected memory. ShruggieGraph returns permission-filtered, cited context and does
+not generate answers itself; you do the reasoning over the returned context and cite the notes you
+used. Never imply a fact is stored if the search did not return it.
+
+Stay proportionate. Probe when a trigger fires and relevant context plausibly exists; stay quiet
+on small talk, and do not narrate empty searches or fire repeated queries for the same subject in
+one session. If nothing relevant comes back, simply answer normally without mentioning the search.
 
 ### Confirmation and honesty
 
 After a successful write, tell the user in one short line what you saved and where (for example,
-"Saved to ShruggieGraph: 'Q3 launch moved to October'"), so the capture is visible and the audit
-trail is honest. If a write fails, say so plainly rather than implying the note was stored.
+"Saved to ShruggieGraph: 'Q3 launch moved to October'"), and note when you marked it sensitive at
+the user's request, so the capture is visible and the audit trail is honest. If a write fails, or you withheld one on the
+user's instruction, say so plainly rather than implying the note was stored.
 
 For the tool input shapes, scopes, and setup details, read
 [assets/capture-reference.md](assets/capture-reference.md).
@@ -110,46 +199,105 @@ it does automatic certs and we don't want to manage renewals by hand.
 
 ```
 Got it. (calls create_note with title = "TLS termination: Caddy on the alpha VM", content =
-"Decision: use Caddy (not nginx) for TLS on the alpha VM. Reason: automatic certificate
+"Decision: use Caddy over nginx for TLS on the alpha VM. Reason: automatic certificate
 issuance and renewal, so no manual renewal management.")
 
 Saved to ShruggieGraph: "TLS termination: Caddy on the alpha VM".
 ```
 
-### Example: recall before answering
+### Example: a personal fact is stored WITHOUT self-marking it sensitive
 
 **User input:**
 
 ```
-What did we decide about TLS on the VM again?
+For the record, my mother's health has been rough lately, so I'm going to be taking
+Fridays off through the spring to help her with appointments.
 ```
 
 **Expected output:**
 
 ```
-(calls search_knowledge with query = "TLS termination decision alpha VM")
+(calls create_note with title = "Fridays off through spring for family care", content =
+"Commitment: taking Fridays off through spring to help with a family member's medical
+appointments." — NO sensitive flag: the user did not ask to mark it, and a personal or medical
+topic is never on its own a reason to set it)
+
+Saved to ShruggieGraph: "Fridays off through spring for family care".
+```
+
+### Example: sensitive is set ONLY on an explicit user instruction
+
+**User input:**
+
+```
+Save my new home address, 42 Elm Street — and keep that one private.
+```
+
+**Expected output:**
+
+```
+(calls create_note with title = "Home address", content = "Home address: 42 Elm Street.",
+sensitive = true — set only because the user explicitly asked to keep it private)
+
+Saved to ShruggieGraph and marked sensitive: "Home address".
+```
+
+### Example: eliciting context when uploading material someone else authored
+
+**User input:**
+
+```
+Here's a letter my father wrote me back in 1998 — hold onto it for me.
+[attaches letter.pdf]
+```
+
+**Expected output:**
+
+```
+(calls upload_source with filename = "letter.pdf", content_type = "application/pdf",
+data_base64 = <bytes>, author = "the user's father", date_of_origin = "1998",
+about = "a personal letter the user's father wrote to them")
+
+Saved the letter to ShruggieGraph, attributed to your father and dated 1998 — so it won't be read
+as something you wrote.
+```
+
+### Example: proactive recall before answering
+
+**User input:**
+
+```
+Okay, back to the alpha VM. Remind me how we're handling TLS there?
+```
+
+**Expected output:**
+
+```
+(recognizes a named subject and a question stored context could answer, calls search_knowledge
+with query = "TLS termination decision alpha VM")
 
 From your memory: you chose Caddy over nginx for TLS on the alpha VM, for automatic certificate
-issuance and renewal (no manual renewals).
+issuance and renewal, so there are no manual renewals to manage.
 ```
 
-### Example: declining to capture
+### Example: withholding a write on explicit instruction
 
 **User input:**
 
 ```
-ugh, long day. anyway what's 12 * 7?
+Here's the door code for the office, 4417. Don't save that anywhere.
 ```
 
 **Expected output:**
 
 ```
-84. (no note written; this is transient chatter with nothing durable to remember)
+Understood, I won't store that. (no note written; withheld on the user's explicit instruction,
+not because of any sensitivity judgment of my own)
 ```
 
 ## Additional Resources
 
-- [assets/capture-reference.md](assets/capture-reference.md) - the `create_note` and
-  `search_knowledge` input shapes, scopes, the normal-sensitivity cap, and memory targeting.
+- [assets/capture-reference.md](assets/capture-reference.md) - the six MCP tools, their input
+  shapes, the five scopes, the `sensitive` boolean, and memory targeting.
 - `README.md` - human-facing setup: connecting claude.ai or Claude Desktop to ShruggieGraph and
   minting a token.

@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `shruggie-graph-memory`: synced from the canonical copy published at
+  `https://graph.shruggie.tech/downloads/shruggie-graph-memory.zip`, the skill's source of truth.
+  The skill is now provider-agnostic (Claude and ChatGPT's uploadable Skills share one `SKILL.md`)
+  and adds a bundled `icon.png`, the `upload_source` write tool for whole files, declared-context
+  fields (`author`, `date_of_origin`, `about`) on writes so derived knowledge attributes correctly
+  when material did not originate with the account owner, a `sensitive` boolean that only the user
+  can set (never inferred from content), proactive recall guidance, twelve additional read/write MCP
+  tools (`get_index_status`, `list_claims`, `list_entities`, `list_relationships`, `list_events`,
+  `get_usage`, `get_insights`, `get_preferences`, `list_shares`, `deescalate_sensitivity`,
+  `reassign_topic`, `correct_identity`), and updated connector endpoints and scopes in `README.md`.
+
 ## [1.8.3] - 2026-08-22
 
 ### Changed
