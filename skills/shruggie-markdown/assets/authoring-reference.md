@@ -182,16 +182,22 @@ two, not as a fragment with a bullet in front of it.
 
 ## Line length and wrapping
 
-Hard-wrap body prose and list-item text to the active width. The active width
-is one of the override set {80, 100, 120}, and 80 is the house default; the
+Soft wrap is the default: one logical line per paragraph and one per list
+item, with no inserted hard breaks. Hard-wrap body prose and list-item text
+only when the operator explicitly opts in for the document (see the
+"Wrapping gate" in `SKILL.md`). Once opted in, the active width is one of
+the override set {80, 100, 120}; 80 is the default hard-wrap width, and the
 operator switches it in plain language ("wrap at 100", "use a 120-column
-wrap"). When the operator explicitly asks for no hard wrapping, the document
-uses soft wrapping only: one logical line per paragraph and one per list
-item, with no inserted hard breaks. The default stays 80.
+wrap"). Never hard-wrap a document that will be read on GitHub (a README, PR
+or issue body, or any GitHub-rendered Markdown) unless the operator has
+explicitly asked for it there; GitHub reflows Markdown prose dynamically at
+the viewport width, and a hard-wrapped source file renders as short, jagged
+lines instead of the smooth paragraphs GitHub would otherwise produce.
 
-A wrapped list item indents its continuation lines to the content column: two
-spaces after a `-`, `*`, or `+` bullet, three after a single-digit ordered
-marker such as `1. `. Correct, wrapped at 80 with a two-space hanging indent:
+Once hard wrap is active, a wrapped list item indents its continuation lines
+to the content column: two spaces after a `-`, `*`, or `+` bullet, three
+after a single-digit ordered marker such as `1. `. Correct, wrapped at 80
+with a two-space hanging indent:
 
 ```markdown
 - Grants are keyed by tenant type, either personal or organization, and a

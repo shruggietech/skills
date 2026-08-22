@@ -1,6 +1,6 @@
 ---
 name: shruggie-markdown
-description: Encodes the ShruggieTech house style for authoring Markdown documents (single-H1 structure, the labeled front-matter block, heading spacing, automatic anchors and manual tables of contents, prose-first density, 80-column hard wrapping with wrap-safe line breaks, GFM footnotes, language-tagged code fences, base64 image embedding, and Mermaid or SVG diagrams). Applies whenever Claude is writing or refactoring a Markdown document to house style. Trigger on phrasings like "write this as a Markdown doc to house style", "format this README", "add a TOC", "embed this image in the Markdown", or "make a Mermaid diagram for this". This skill is the Markdown authoring house style, not the shruggie-markdown software product; do not fire it for software, build, packaging, or release requests about that product.
+description: Encodes the ShruggieTech house style for authoring Markdown documents (single-H1 structure, the labeled front-matter block, heading spacing, automatic anchors and manual tables of contents, prose-first density, opt-in hard wrapping with wrap-safe line breaks when the operator requests it, GFM footnotes, language-tagged code fences, base64 image embedding, and Mermaid or SVG diagrams). Applies whenever Claude is writing or refactoring a Markdown document to house style. Trigger on phrasings like "write this as a Markdown doc to house style", "format this README", "add a TOC", "embed this image in the Markdown", or "make a Mermaid diagram for this". This skill is the Markdown authoring house style, not the shruggie-markdown software product; do not fire it for software, build, packaging, or release requests about that product.
 disable-model-invocation: false
 user-invocable: true
 when_to_use: Use when writing or cleaning up any Markdown document (README, report, spec, sprint plan, case study, agent context file) to the ShruggieTech standard, or when the operator says "fix the headings", "add footnotes", "make this self-contained", "wrap this at 80", "fix the line length", or "turn this into a Mermaid diagram". Do not use for the shruggie-markdown software product or for non-Markdown output.
@@ -56,6 +56,23 @@ When in doubt about the audience, ask. When the document targets more than one
 surface, format for the lowest common denominator (see
 `assets/renderer-compatibility.md`).
 
+## Wrapping gate (read second)
+
+Hard wrapping is opt-in only. It is never the default and never assumed from
+habit or prior sessions. The default for every document is soft wrap: one
+logical line per paragraph and one per list item, with no inserted hard
+breaks.
+
+Do not hard-wrap a document, especially one destined for GitHub rendering (a
+README, PR description, issue body, commit message, or any Markdown that
+GitHub's web UI will display), unless the human operator explicitly asks for
+it in the current conversation ("wrap at 80", "hard-wrap this", "wrap this for
+the linter"). GitHub reflows Markdown prose dynamically at whatever width the
+viewport allows; a hard-wrapped source file gains nothing there and instead
+renders as short, jagged, hard-to-read lines. Only apply the hard-wrap
+mechanics in "Line length and wrapping" below once the operator has opted in
+for that specific document.
+
 ## House-style rules
 
 ### Document structure
@@ -97,18 +114,22 @@ of fragments. This is a stated house preference.
 
 ### Line length and wrapping
 
-The house default hard-wrap width is 80 columns, measured in source
-characters, not rendered width. Recognized operator overrides are 100 and
-120 columns; when the operator asks in plain language ("wrap at 100", "use a
-120-column wrap"), apply that width for that document. If the operator
-explicitly requests no hard wrapping ("no hard wrap", "disable wrapping",
-"one line per paragraph"), the document uses soft wrapping only: one logical
-line per paragraph and one per list item, with no inserted hard breaks. That
-mode is opt-in; the default stays 80.
+Soft wrapping is the default for every document: one logical line per
+paragraph and one per list item, with no inserted hard breaks. Hard wrapping
+is opt-in only (see "Wrapping gate" above) and activates when the operator
+explicitly asks for it in the current conversation ("wrap at 80", "hard-wrap
+this", "wrap this for the linter"). Once hard wrap is active, the width is
+80 columns by default, measured in source characters, not rendered width;
+recognized operator overrides are 100 and 120 columns, selected in plain
+language ("wrap at 100", "use a 120-column wrap"). Never hard-wrap Markdown
+that will be read on GitHub (READMEs, PR or issue bodies, GitHub-rendered
+docs) unless the operator has explicitly opted in for that document; GitHub
+reflows prose dynamically and a hard-wrapped file renders as jagged short
+lines there instead of the smooth paragraphs GitHub would otherwise produce.
 
-Hard-wrap body prose paragraphs and the text of list items (bulleted,
-ordered, and footnote definitions) to the active width. Never hard-wrap and
-never merge these constructs:
+Once hard wrap is active, hard-wrap body prose paragraphs and the text of
+list items (bulleted, ordered, and footnote definitions) to the active
+width. Never hard-wrap and never merge these constructs:
 
 - ATX headings.
 - Fenced code blocks and everything inside them.
@@ -128,9 +149,10 @@ active width and the operator lints with default MD013, surface that the lint
 config needs exceptions (`tables: false`, `code_blocks: false`, or a raised
 `heading_line_length`). Do not mangle those constructs to dodge the linter.
 
-Continuation-line safety has the highest priority and overrides the width
-limit. Insert hard breaks only at spaces between words; never break inside an
-inline code span, a `[text](url)` link, an image, or a URL. Indent every
+When hard wrap is active, continuation-line safety has the highest priority
+and overrides the width limit. Insert hard breaks only at spaces between
+words; never break inside an inline code span, a `[text](url)` link, an
+image, or a URL. Indent every
 continuation line of a list item to the item's content column (the marker
 width plus its trailing space): two spaces for a `-`, `*`, or `+` bullet, and
 three for a single-digit ordered marker such as `1. ` (match the actual
@@ -245,9 +267,12 @@ Every Markdown file the skill writes complies with `CONVENTIONS.md`:
   newline.
 - Zero em-dashes and zero en-dashes anywhere, including inside code comments and
   `alt` text. Use parentheses, commas, or standard hyphens.
-- Body prose and list text are hard-wrapped to the house width (default 80);
-  see "Line length and wrapping". A wrapped continuation line never begins
-  with a Markdown block marker.
+- Body prose and list text use soft wrap by default (one logical line per
+  paragraph or list item); hard-wrap only when the operator explicitly opts
+  in for that document, and never for GitHub-bound content unless explicitly
+  requested. See "Wrapping gate" and "Line length and wrapping". When hard
+  wrap is active, a wrapped continuation line never begins with a Markdown
+  block marker.
 - No AI rhetorical tropes, especially the "not just X, it's Y" contrast.
 - Every fenced code block declares a language.
 - For plans, sprint documents, and update logs, sequence sessions chronologically.
@@ -257,8 +282,8 @@ Every Markdown file the skill writes complies with `CONVENTIONS.md`:
 - `assets/authoring-reference.md`: long-form reference with worked examples
   for the single H1, front-matter block, heading spacing, horizontal-rule
   gotchas, anchors and TOCs, prose density, line length and wrapping (the
-  width override set, the spaced-hyphen and year wrap traps, and the
-  exemptions), justified text, footnotes, and code fences.
+  opt-in default, the width override set, the spaced-hyphen and year wrap
+  traps, and the exemptions), justified text, footnotes, and code fences.
 - `assets/images-and-diagrams.md`: base64 data-URI image embedding, Mermaid, SVG
   (committed file and inline), the script invocations, and the no-ASCII rule.
 - `assets/renderer-compatibility.md`: the "what renders where" matrix across

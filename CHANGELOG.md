@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `shruggie-markdown`: hard wrapping is now opt-in only, never assumed. A new
+  `Wrapping gate` section (mirroring the existing `Audience gate`) sits right
+  after the intro so agents hit it before any rules, and the `Line length and
+  wrapping` rule now defaults every document to soft wrap; the 80/100/120
+  hard-wrap widths apply only when the operator explicitly requests wrapping
+  for that document. Fixes GitHub PRs, issues, and READMEs rendering as
+  jagged, hard-to-read broken lines under GitHub's own dynamic reflow.
+
 ## [1.8.2] - 2026-07-19
 
 ### Changed
