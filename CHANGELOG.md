@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `shruggie-bash`: new skill for authoring and refactoring Bash (`.sh`) scripts to the ShruggieTech
+  scripting standard. The Bash twin of `shruggie-powershell`: the same fixed 80-column four-section
+  layout, a load-bearing man-page-style header help block with a self-parsing `print_help`, an
+  explicit safety preamble (`set -euo pipefail` + `IFS`, or a documented `set -o pipefail` for
+  graceful-degradation tools), `snake_case` naming, the `has_cmd` / `log_*` / `safe_run` fixtures,
+  `-q`/`--quiet` and `--silent` verbosity with `NO_COLOR` and TTY detection, a 0/1/2 exit-code
+  contract, no emojis, and UTF-8-no-BOM/LF output. Bundles the authoritative convention document,
+  copy-paste fixtures, a blank scaffold, three worked examples, and a ShellCheck-aware compliance
+  checker (`scripts/test-script-compliance.sh`).
+
 ## [1.10.1] - 2026-08-22
 
 ### Fixed
