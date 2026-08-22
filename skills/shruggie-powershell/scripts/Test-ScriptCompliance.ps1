@@ -16,11 +16,21 @@
         by exactly 79 underscores
       - A leading comment-based help block before the CmdletBinding attribute
 
-    A POSIX-shell twin (test-script-compliance.sh) performs the same checks so
-    remote agents on non-Windows hosts can verify without pwsh.
+    It also prints advisory WARN lines (never affecting the exit code) for two
+    heuristic, best-effort concerns:
+
+      - Possible leaked PII: a Windows or Unix/macOS home-directory path with a
+        captured username segment, or an email-address-shaped string
+      - A declared function whose verb is not in PowerShell's approved-verb
+        list (Get-Verb)
+
+    A POSIX-shell twin (test-script-compliance.sh) performs the same structural
+    checks and the PII scan so remote agents on non-Windows hosts can verify
+    without pwsh; the approved-verb scan needs a live PowerShell session
+    (Get-Verb) and is PowerShell-twin-only.
 
     Exit codes: 0 every check passed, 1 at least one check failed, 2 the target
-    file could not be read.
+    file could not be read. The advisory WARN lines never change the exit code.
 
 .PARAMETER Path
     Path to the .ps1 file to check. Read literally.
@@ -33,6 +43,14 @@
 
 .PARAMETER Silent
     Suppress all output. The exit code still reports the verdict.
+
+.PARAMETER SkipPiiCheck
+    Skip the advisory scan for possible leaked PII (username-bearing paths,
+    email-address-shaped strings).
+
+.PARAMETER SkipVerbCheck
+    Skip the advisory scan for function names using a verb outside
+    PowerShell's approved-verb list.
 
 .PARAMETER Help
     Print this help text to the terminal.
@@ -62,6 +80,12 @@ Param(
 
     [Parameter(Mandatory=$false,ParameterSetName='Default')]
     [Switch]$Silent,
+
+    [Parameter(Mandatory=$false,ParameterSetName='Default')]
+    [Switch]$SkipPiiCheck,
+
+    [Parameter(Mandatory=$false,ParameterSetName='Default')]
+    [Switch]$SkipVerbCheck,
 
     [Parameter(Mandatory=$true,ParameterSetName='HelpText')]
     [Alias("h")]
@@ -110,6 +134,59 @@ Param(
             if ($cp -eq 0x200D) { return $false }
         }
         return $true
+    }
+
+    function Get-PiiWarning {
+        [CmdletBinding()]
+        Param(
+            [Parameter(Mandatory=$true)]
+            [string]$Text
+        )
+        # Advisory, best-effort scan. Never fails the run; the caller decides
+        # what to do with the findings. Deliberately does not attempt a
+        # phone-number pattern (collides too readily with version strings and
+        # port numbers) or free-text personal-name detection (not
+        # deterministically tractable).
+        $findings = New-Object System.Collections.Generic.List[string]
+
+        $winHits = [regex]::Matches($Text, 'C:\\Users\\([^\\]+)\\').Count
+        if ($winHits -gt 0) {
+            $findings.Add(("Windows user-profile path with a captured username segment ({0} hit(s))" -f $winHits))
+        }
+
+        $unixHits = [regex]::Matches($Text, '(?:/home/|/Users/)([^/\s]+)/').Count
+        if ($unixHits -gt 0) {
+            $findings.Add(("Unix/macOS home-directory path with a captured username segment ({0} hit(s))" -f $unixHits))
+        }
+
+        $emailHits = [regex]::Matches($Text, '[\w.+-]+@[\w-]+\.[\w.-]+').Count
+        if ($emailHits -gt 0) {
+            $findings.Add(("email-address-shaped string ({0} hit(s))" -f $emailHits))
+        }
+
+        return $findings
+    }
+
+    function Test-ApprovedVerb {
+        [CmdletBinding()]
+        Param(
+            [Parameter(Mandatory=$true)]
+            [string]$ScriptText
+        )
+        # AST-based, not regex: immune to function-name-shaped text inside
+        # comments or string literals, and handles multi-line signatures.
+        $approved = (Get-Verb).Verb
+        $tokens = $null
+        $parseErrors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput($ScriptText, [ref]$tokens, [ref]$parseErrors)
+        $funcs = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
+        $bad = New-Object System.Collections.Generic.List[string]
+        foreach ($f in $funcs) {
+            if ($f.Name -match '^([A-Za-z0-9]+)-([A-Za-z0-9]+)$') {
+                if ($approved -notcontains $Matches[1]) { $bad.Add($f.Name) }
+            }
+        }
+        return $bad
     }
 
 #_______________________________________________________________________________
@@ -203,6 +280,24 @@ Param(
     $helpOk = ($openIdx -ge 0 -and $closeIdx -gt $openIdx -and ($bindIdx -lt 0 -or $closeIdx -lt $bindIdx))
     Write-Result -Pass $helpOk -Message 'Comment-based help block precedes [CmdletBinding'
     if (-not $helpOk) { $failures++ }
+
+    # Advisory only: possible leaked PII. Never affects $failures or the exit
+    # code; opt out with -SkipPiiCheck. Suppressed by -Silent, not by -Quiet
+    # (matches how Write-Log's Warn level already survives -Quiet).
+    if (-not $SkipPiiCheck -and -not $script:Silent) {
+        foreach ($finding in (Get-PiiWarning -Text $text)) {
+            Write-Host ("WARN: possible leaked PII: {0}" -f $finding) -ForegroundColor Yellow
+        }
+    }
+
+    # Advisory only: function names using a verb outside PowerShell's
+    # approved-verb list. Never affects $failures or the exit code; opt out
+    # with -SkipVerbCheck.
+    if (-not $SkipVerbCheck -and -not $script:Silent) {
+        foreach ($name in (Test-ApprovedVerb -ScriptText $text)) {
+            Write-Host ("WARN: function '{0}' uses a verb not in PowerShell's approved-verb list (Get-Verb)" -f $name) -ForegroundColor Yellow
+        }
+    }
 
     if (-not $script:Silent) {
         Write-Host ''
