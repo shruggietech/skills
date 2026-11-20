@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `workflowy`: work in the operator's private Workflowy notebook through Desktop MCP.
+  Covers project opt-in, brainstorming, backfill, and alphabetized shared collections.
+
 ## [1.11.0] - 2026-08-22
 
 ### Added
