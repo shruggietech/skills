@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `workflowy` v1.1.0 formalizes the shared catalog and project record layouts, describes
+  native dates and backlink-aware links, and adds copyable project and global templates.
+
 ## [1.12.0] - 2026-11-20
 
 ### Added
