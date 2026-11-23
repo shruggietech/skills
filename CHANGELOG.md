@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-11-23
+
 ### Changed
 
 - `workflowy` v1.1.0 formalizes the shared catalog and project record layouts, describes
@@ -303,6 +305,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
 [unreleased]: https://github.com/shruggietech/skills/compare/v1.12.0...HEAD
+[1.13.0]: https://github.com/shruggietech/skills/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/shruggietech/skills/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/shruggietech/skills/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/shruggietech/skills/compare/v1.10.0...v1.10.1
