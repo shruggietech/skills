@@ -1,23 +1,35 @@
 # Shared record templates
 
-Use one preferred name followed by relevant native hashtags. Each indented line is a child bullet. Omit optional fields without evidence. Internal link placeholders refer to existing Workflowy bullets.
+Put each entry under the appropriate REFERENCE catalog. Use a preferred name, trailing topic hashtags when useful, and standalone fields with nested values. Each link gets its own bullet.
 
 ```text
-WebVTT #subtitles #file-formats
-  Definition: Timed text-track format for cues synchronized to media.
-  Aliases: Web Video Text Tracks
-  Source: [W3C WebVTT specification]
-
-Cueson #cueson #subtitles
-  Type: Software
-  Role: Subtitle interchange tool
-  Summary: Reads, preserves, renders, and converts subtitle documents.
-  Homepage: https://cueson.io/
-
-Cueson WebVTT format contract #cueson #subtitles
-  URL: https://cueson.io/docs/formats/webvtt/
-  Use when: Check which features the software preserves and renders.
-  Type: Technical documentation
-  About: [Cueson]
-  About: [WebVTT]
+- Glossary
+  - WebVTT #subtitles
+    - Definition
+      - Timed text-track format for cues synchronized to media.
+    - Aliases
+      - Web Video Text Tracks
+    - Source
+      - [W3C WebVTT specification]
+- Entities
+  - Cueson #subtitles
+    - Type
+      - Software
+    - Role
+      - Subtitle interchange tool
+    - Summary
+      - Reads, preserves, renders, and converts subtitle documents.
+    - Homepage
+      - https://cueson.io/
+- Remote Data
+  - Cueson WebVTT format contract #subtitles
+    - URL
+      - https://cueson.io/docs/formats/webvtt/
+    - Use when
+      - Check which features the software preserves and renders.
+    - Type
+      - Technical documentation
+    - About
+      - [Cueson]
+      - [WebVTT]
 ```

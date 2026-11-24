@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `workflowy` v1.2.0 defines the workspace bootstrap, applicable standards, flat dated notes,
+  nested fields, and separate slice records. Adds a legacy remediation guide and nonlocal
+  fallback instructions. Routine recording leaves timeline construction to the operator.
+
 ## [1.13.0] - 2026-11-23
 
 ### Changed
