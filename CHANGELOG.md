@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-11-24
+
 ### Changed
 
 - `workflowy` v1.2.0 defines the workspace bootstrap, applicable standards, flat dated notes,
@@ -310,7 +312,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/install.ps1` symlink installer for Windows 11 (PowerShell 5.1+)
 - `skills/_template/SKILL.md` starting point for new skill authoring
 
-[unreleased]: https://github.com/shruggietech/skills/compare/v1.12.0...HEAD
+[unreleased]: https://github.com/shruggietech/skills/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/shruggietech/skills/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/shruggietech/skills/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/shruggietech/skills/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/shruggietech/skills/compare/v1.10.1...v1.11.0
