@@ -16,7 +16,7 @@ Keep direct records alphabetized by name, ignoring case and trailing native hash
 
 ## Link with purpose
 
-Use standalone field labels and nest one value or target per child. Use stable Workflowy node links where the target exists. Let Workflowy generate backlinks and use hashtags for topic discovery. Put multiple values under the same field label.
+Use the Workflowy bullet format for each standalone field label and every nested value. Nest one value or target per child. Use stable Workflowy node links where the target exists. Let Workflowy generate backlinks and use hashtags for topic discovery. Put multiple values under the same field label.
 
 - `Source` connects a definition or description to supporting material. Reuse the existing reference when it fits. Keep the precise section or commit as a locator when it carries the evidence.
 - `About` connects a reference to its subject. Put multiple targets in separate bullets beneath one `About` field.

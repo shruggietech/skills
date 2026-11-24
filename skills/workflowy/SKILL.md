@@ -3,7 +3,7 @@ name: workflowy
 description: Work with the operator and their agents in their private Workflowy workspace. Use for candid collaboration, project notes, Spec Kit records, personal notes, applicable company standards, shared references, project onboarding, backfills, or repair of legacy Workflowy records.
 disable-model-invocation: false
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # Workflowy
@@ -19,7 +19,7 @@ Use the operator's private workspace to develop ideas and drafts, share candid f
 ## Write records
 
 - Named projects use `info`, `notes`, and `spec-kit` when applicable. Keep `info` current and link to Git, the established tracker, or the most authoritative project artifact.
-- Put dated records directly under `notes`, in oldest-first order. The title contains only its ISO 8601 date or timestamp. Put substantive follow-ups at the same level and link to the prior record. Require `Title`, `Tags`, and `Details`. Write field labels on their own bullets with values as children. Use one tag, link, or distinct item per child. The [record contract](assets/record-format.md) defines precision, optional fields, ordering, and the slice format.
+- Put dated records directly under `notes`, in oldest-first order. The title contains only its ISO 8601 date or timestamp. Put substantive follow-ups at the same level and link to the prior record. Require `Title`, `Tags`, and `Details`. Write field labels on their own bullets with values as children. Use the explicit Workflowy bullet format for every field and value. Only content inside `Details` may use another format. Use one tag, link, or distinct item per child. The [record contract](assets/record-format.md) defines precision, optional fields, ordering, and the slice format.
 - Place one formal slice directly under `spec-kit` in code order. Use the formal code and short title. Put the verified date and documented epic in child fields. Use the [project outline template](assets/templates/project-outline.md).
 - Record source dates and useful scope tags. The operator owns any timeline construction. Routine recording excludes timeline fields or tags, saved searches, views, and exports.
 - Use [catalog guidance](assets/shared-catalogs.md) for **REFERENCE > Entities**, **Glossary**, and **Remote Data**. Look up identity first, sort by name, and use direct links for specific relationships. Use absolute external URLs and local evidence references sparingly.
@@ -52,7 +52,9 @@ In `notes`, keep major sessions and substantive updates as a flat, oldest-first
 list. Use only the ISO 8601 date or timestamp as the title. Retain the finest
 supported precision and offset. Put the description, scope tags, and prose
 under `Title`, `Tags`, and `Details`. Use label-only field bullets with each
-value or link nested in its own bullet. Link related updates. The operator
+value or link nested in its own bullet. Require the Workflowy bullet format
+for fields and values. Only the contents of `Details` may use other formats.
+Link related updates. The operator
 owns timeline construction. Agents record dates without creating timeline
 metadata, views, saved searches, or exports.
 

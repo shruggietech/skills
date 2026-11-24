@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `workflowy` v1.2.1 requires explicit Workflowy bullet formatting for structured records,
+  fields, and values. Content inside `Details` may use other formats.
+
 ## [1.14.0] - 2026-11-24
 
 ### Changed

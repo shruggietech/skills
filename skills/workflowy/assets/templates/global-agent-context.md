@@ -11,7 +11,8 @@ Write records as normal bullets. Never use comments or comment drafts for
 record storage. Put dated records directly under `notes`, oldest first,
 with only the most precise supported ISO 8601 date or timestamp as title.
 Use standalone `Title`, `Tags`, and `Details` labels and nest each value
-under its field. Link related records and exact evidence with one link per
+under its field. Require the Workflowy bullet format for fields and values.
+Only the contents of `Details` may use other formats. Link related records and exact evidence with one link per
 bullet. The operator owns timeline construction. Record dates without
 creating timeline metadata, views, searches, or exports.
 
