@@ -12,7 +12,9 @@ record storage. Put dated records directly under `notes`, oldest first,
 with only the most precise supported ISO 8601 date or timestamp as title.
 Use standalone `Title`, `Tags`, and `Details` labels and nest each value
 under its field. Require the Workflowy bullet format for fields and values.
-Only the contents of `Details` may use other formats. Link related records and exact evidence with one link per
+Only the contents of `Details` may use other formats. Keep titles free of
+inline tags and use one hashtag per `Tags` value. Use `info` for project
+`Tags`, durable `Details`, and primary `Links`. Link related records and exact evidence with one link per
 bullet. The operator owns timeline construction. Record dates without
 creating timeline metadata, views, searches, or exports.
 

@@ -3,10 +3,15 @@
 Paste the outline into the named project branch. Replace placeholders, omit optional fields without values, and include `spec-kit` where the project uses it. Add `Epic` only for documented membership. Use the same dated shape under Personal notes.
 
 ```text
-- project-name #project-name
+- project-name
   - info
-    - Purpose
-      - <brief>
+    - Tags
+      - #project-name
+    - Details
+      - <durable purpose and scope>
+    - Links
+      - <primary repository or project URL>
+      - <official tracker or documentation URL>
     - Current state
       - <latest supported result>
     - Next action

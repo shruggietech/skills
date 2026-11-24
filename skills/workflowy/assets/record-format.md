@@ -12,7 +12,7 @@ Use the same contract under project and Personal `notes`.
 | Field | Value |
 | --- | --- |
 | `Title` | Short descriptive label. |
-| `Tags` | Primary project hashtag or `#personal`, with any relevant existing topic tags. One native tag per value. |
+| `Tags` | Primary project hashtag or `#personal`, with any relevant existing topic tags. One native hashtag per value. Keep tags out of names and other structured fields. |
 | `Details` | The substantive record, including context, reasoning, questions, and findings. Break it into readable bullets. |
 | `Outcome` | Supported result or disposition when useful. |
 | `Evidence` | Exact source, one link or locator per child. Use absolute external URLs. |
@@ -23,10 +23,14 @@ Use the same contract under project and Personal `notes`.
 
 Use [the project outline](templates/project-outline.md) for a paste-ready example. A native Workflowy date can be a standalone value when it preserves the source precision, with the exact ISO timestamp retained as the authoritative date when the widget represents a day only.
 
+## Project info
+
+Use `Tags` for project-level hashtags and `Details` for the durable purpose, scope, and essential context. Use `Links` for primary project entry points, such as the repository, issue tracker, documentation, or the canonical Workflowy project record for folder-only work. Put each link on its own Workflowy bullet. Use `Current state`, `Next action`, and `Blockers` when useful. Link claims to exact project evidence. Add links backed by the project sources.
+
 ## Spec Kit
 
 Keep one direct bullet per formal slice in code order. Use only its formal code and short title, such as `S094 Check source order`. Give each slice its own bullet even when it belongs to a release or epic.
 
-Use label-only fields with nested values. Use `Date` for the supported authoritative integration or closeout date and `Date basis` when its meaning needs explanation. Use Pending or Unknown under `Date` when applicable and leave it out of date queries. Use `Epic` when membership is documented, with the linked epic as its own value. Use `Scope`, `Outcome`, `Evidence`, `Tags`, and `Related` when useful. Keep substantive dated narratives in `notes` and link from the slice. Put each evidence link on its own bullet.
+Use label-only fields with nested values. Use `Date` for the supported authoritative integration or closeout date and `Date basis` when its meaning needs explanation. Use Pending or Unknown under `Date` when applicable and leave it out of date queries. Use `Epic` when membership is documented, with the linked epic as its own value. Use `Scope`, `Outcome`, `Evidence`, `Tags`, and `Related` when useful. Put each hashtag under `Tags` on its own bullet. Keep substantive dated narratives in `notes` and link from the slice. Put each evidence link on its own bullet.
 
 The operator owns any future timeline. Routine agent work creates neither timeline fields or tags nor saved searches, synthesized views, or exports.

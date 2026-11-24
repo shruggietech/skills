@@ -8,11 +8,11 @@ All three catalogs live under **REFERENCE**.
 | --- | --- | --- | --- |
 | Glossary | Reusable concept, protocol, method, or format | Definition | Aliases, Scope, Source, Broader |
 | Entities | Named person, organization, software, service, model, dataset, or system | Type, Summary | Role, Aliases, Homepage, External ID, Source, Maintained by |
-| Remote Data | Citable source, edition, specification, release, or artifact | URL, Use when | Type, Publisher, Source ID, Version, About, Supersedes |
+| Remote Data | Citable source, edition, specification, release, or artifact | Links, Use when | Type, Publisher, Version, About, Supersedes |
 
 A named language or platform ecosystem can have an entity record when it has its own tools, maintainers, and identity. Put abstract semantics in Glossary and independently citable editions in Remote Data. Use `Person`, `Organization`, `Software`, `Service`, `Platform`, `Language`, `Model`, `Dataset`, or `System` as entity types. Put detail such as *Go library* or *build tool* in `Role`. For existing references, retain meaningful source-kind and authority detail.
 
-Keep direct records alphabetized by name, ignoring case and trailing native hashtags. Use aliases on the preferred record. Search all three catalogs by name, alias, authoritative ID, and source link before creating anything. Shared titles and URLs are leads to check against meaning. Preserve distinct versions, sections, and real name collisions. Keep entity homepages and evidence links in their own fields. Use absolute external URLs in Remote Data. Keep machine-local evidence with its owning project.
+Keep direct records alphabetized by preferred name, ignoring case. Use a clean title. For each tagged record, put a single `Tags` field directly beneath the record and give each native hashtag its own bullet beneath it. Use aliases on the preferred record. Search all three catalogs by name, alias, authoritative ID, and source link before creating anything. Shared titles and URLs are leads to check against meaning. Preserve distinct versions, sections, and real name collisions. Keep entity homepages and evidence links in their own fields. In Remote Data, use `Links` for absolute external URLs, with one distinct target per child. A source-specific identifier may appear in the label of a link it identifies. Keep imported codes out of separate fields. Keep machine-local evidence with its owning project.
 
 ## Link with purpose
 
@@ -30,7 +30,7 @@ For example, **WebVTT** is a glossary format concept. Its `Source` points to the
 
 Update the canonical bullet in place. When merging verified duplicates, preserve meaningful aliases, unique evidence, and inbound navigation. Relink affected sources to the canonical record before removing verified duplicates. Workflowy-generated backlink excerpts are views of incoming links. Exclude them from record counts and exports.
 
-Keep publisher-issued IDs in `Source ID`, scoped by `Publisher` or known issuing authority. Preserve exact editions and source locators. Start graph integration as a projection of the outline. Keep Workflowy node IDs as origin keys and persist a portable identifier for each canonical record when first syncing. Export labels, types, source IDs, and typed links independently. Reuse the persisted IDs across operator-directed exports and derive reciprocal views from the original relation. Keep the source-of-truth and audience boundaries explicit.
+Preserve exact editions and source locators. Start graph integration as a projection of the outline. Keep Workflowy node IDs as origin keys and persist a portable identifier for each canonical record when first syncing. Export labels, types, source URLs, and typed links independently. Reuse the persisted IDs across operator-directed exports and derive reciprocal views from the original relation. Keep the source-of-truth and audience boundaries explicit.
 
 - [SKOS for labels, scope and concept relationships](https://www.w3.org/TR/skos-reference/)
 - [Dublin Core Metadata Terms for source, subject, publisher and version](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/)

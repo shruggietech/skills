@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `workflowy` v1.2.2 moves native hashtags into a dedicated `Tags` field for shared
+  catalog records, projects, notes, and slices. Standardizes project info and Remote Data
+  links and removes the imported Source ID field from shared references.
+
 ## [1.14.1] - 2026-11-24
 
 ### Fixed
