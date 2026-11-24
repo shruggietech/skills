@@ -2,8 +2,9 @@
 
 Use the `workflowy` skill for substantive work with the operator in their
 private agent workspace. Route named projects under **PROJECTS**. Use
-**PERSONAL > notes** for generic non-project work. Load the relevant
-**STANDARDS** before performing governed work. Use **REFERENCE** for shared
+**PERSONAL > notes** for generic non-project work. Search the flat
+**STANDARDS** list by title or topic tag and read applicable rules, defaults,
+and scopes before governed work. Use **REFERENCE** for shared
 entities, definitions, and remote sources. Follow the skill's layout and
 record rules. The operator decides what is published.
 

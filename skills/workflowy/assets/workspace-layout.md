@@ -36,4 +36,16 @@ Use [the catalog contracts](shared-catalogs.md) for Entities, Glossary, and Remo
 
 ## STANDARDS
 
-This is the operator's durable guide to applicable company and cross-project practices. Before governed work, locate the relevant topic and read its current instructions and linked authority. Apply the parts that govern the task and respect any documented scope. Put lasting requirements here when the operator asks to record a standard. Use the relevant project or Personal notes for session history. Leave the topic structure to the operator's practices.
+This is the operator's durable guide to company and cross-project practices. Keep one standard per direct child of **STANDARDS**, sorted alphabetically by title, ignoring case. Use normal Workflowy bullets and reuse the existing record when revising a standard.
+
+Use a `tags` field with one native hashtag per child. Assign the most relevant topic and add another when people would reasonably look under either topic.
+
+- `#standards-collaboration` covers operator intent, coordination, and handoffs.
+- `#standards-delivery` covers work scope, specifications, testing gates, and release authority.
+- `#standards-evidence` covers sources, verification, attribution, and uncertainty.
+- `#standards-tooling` covers tools, storage, artifacts, and data control.
+- `#standards-writing` covers prose, presentation, and formatting.
+
+Keep the directive under `rule` for a requirement or `default` for a usual practice. Retain any `scope`, `source`, and `recorded` fields. Keep cited sources and related standards as direct links.
+
+Before governed work, search within **STANDARDS** by title or topic tag. Follow a tag match to its owning standard and read its directive and any scope or linked authority. Apply the standards that govern the task. Record session history under the relevant project or Personal notes. [Workflowy search](https://workflowy.com/help/search-your-notes/)

@@ -3,7 +3,7 @@ name: workflowy
 description: Work with the operator and their agents in their private Workflowy workspace. Use for candid collaboration, project notes, Spec Kit records, personal notes, applicable company standards, shared references, project onboarding, backfills, or repair of legacy Workflowy records.
 disable-model-invocation: false
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
 ---
 
 # Workflowy
@@ -13,7 +13,7 @@ Use the operator's private workspace to develop ideas and drafts, share candid f
 ## Find the workspace
 
 - Discover an authorized connector and confirm access with a scoped read. Workflowy Desktop MCP requires a running, signed-in desktop app, Local MCP enabled, and a connected client. A cloud agent can use a separately configured, operator-authorized connector if available. When access is unavailable, continue under the available instructions and supply an appropriately private, ready-to-paste nested outline with its intended destination. Mark it unsynced. [Official Desktop MCP setup](https://community.workflowy.com/t/workflowy-desktop-mcp/1695)
-- Use the layout and exact ABOUT bootstrap in [Workspace layout](assets/workspace-layout.md). Find a named project by its owner-confirmed link or under **PROJECTS**, in case-insensitive alphabetical order. Route generic non-project notes to **PERSONAL > notes**. Load the applicable **STANDARDS** before doing work those standards govern.
+- Use the layout and exact ABOUT bootstrap in [Workspace layout](assets/workspace-layout.md). Find a named project by its owner-confirmed link or under **PROJECTS**, in case-insensitive alphabetical order. Route generic non-project notes to **PERSONAL > notes**. Search the flat **STANDARDS** list by title or topic tag before governed work. Read each applicable standard's `rule` or `default` and any `scope`.
 - Use normal bullets for discussion, drafts, evidence, and updates. Never save records as Workflowy comments or comment drafts. Check the existing record first and add a link or a delta when the finding already has a home.
 
 ## Write records
@@ -41,7 +41,8 @@ Paste this block into the active project `AGENTS.md` or equivalent to enable the
 This project opts into the `workflowy` skill and its private agent workspace.
 Load the skill when available. Use the operator's project link or find this
 repo or folder under **AI Agent Workspace > PROJECTS**. Reuse its branch or
-insert it alphabetically. Read the applicable **STANDARDS** before governed work.
+insert it alphabetically. Search **STANDARDS** by title or topic tag. Read the
+applicable rules, defaults, and scopes before governed work.
 
 Use normal bullets for candid discussion, drafts, decisions, and evidence.
 Never store work in Workflowy comments or comment drafts. Give `info` exactly

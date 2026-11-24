@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `workflowy` v1.3.1 documents the flat, alphabetized standards list and five
+  discovery tags, including how to preserve rules, defaults, scope, and links.
+
 ## [1.15.0] - 2026-11-24
 
 ### Changed
