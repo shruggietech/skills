@@ -28,11 +28,11 @@ Use `notes` for generic non-project work. Follow the [dated record contract](rec
 
 ## PROJECTS
 
-Use one branch per named project. Sort by name, ignoring case. Put project-level hashtags under `info > Tags` as individual bullet values. Put `info`, `notes`, and where applicable `spec-kit` directly under it. Use `info > Details` for durable purpose and scope, and `info > Links` for primary repository, tracker, documentation, or other verified project entry points. Use the [project template](templates/project-outline.md) and [backfill guide](project-backfill.md).
+Use one branch per named project. Sort by name, ignoring case. Put project-level hashtags under `info > tags` as individual bullet values. Put `info`, `notes`, and where applicable `spec-kit` directly under it. Give `info` exactly three direct children: `tags`, `links`, and `details`. Put primary repository, tracker, documentation, or other verified entry points under `links`. Put all other project context under `details`. Use the [project template](templates/project-outline.md) and [backfill guide](project-backfill.md).
 
 ## REFERENCE
 
-Use [the catalog contracts](shared-catalogs.md) for Entities, Glossary, and Remote Data. Sort records within each catalog by preferred name, ignoring case. Use `Tags` for each record's hashtags.
+Use [the catalog contracts](shared-catalogs.md) for Entities, Glossary, and Remote Data. Sort records within each catalog by preferred name, ignoring case. Use `tags` for each record's hashtags.
 
 ## STANDARDS
 

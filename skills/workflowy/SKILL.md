@@ -3,7 +3,7 @@ name: workflowy
 description: Work with the operator and their agents in their private Workflowy workspace. Use for candid collaboration, project notes, Spec Kit records, personal notes, applicable company standards, shared references, project onboarding, backfills, or repair of legacy Workflowy records.
 disable-model-invocation: false
 metadata:
-  version: "1.2.2"
+  version: "1.3.0"
 ---
 
 # Workflowy
@@ -18,10 +18,11 @@ Use the operator's private workspace to develop ideas and drafts, share candid f
 
 ## Write records
 
-- Named projects use `info`, `notes`, and `spec-kit` when applicable. Use `info` for project-level `Tags`, durable `Details`, and primary `Links`. Keep `Current state` and next actions current with links to the authoritative project artifacts.
-- Put dated records directly under `notes`, in oldest-first order. The title contains only its ISO 8601 date or timestamp. Put substantive follow-ups at the same level and link to the prior record. Require `Title`, `Tags`, and `Details`. Write field labels on their own bullets with values as children. Use the explicit Workflowy bullet format for every field and value. Only content inside `Details` may use another format. Use one tag, link, or distinct item per child. The [record contract](assets/record-format.md) defines precision, optional fields, ordering, and the slice format.
+- Named projects use `info`, `notes`, and `spec-kit` when applicable. The only direct children of `info` are `tags`, `links`, and `details`. Under `details`, keep purpose, current state, next actions, blockers, and supporting evidence.
+- Use lowercase letters and underscores for reusable field names, such as `current_state` and `date_basis`. Keep established section names and distinct record titles. Format exact technical literals as inline code. Use the [MCP example](assets/workflowy-mcp.md#write-inline-code) to write native code formatting.
+- Put dated records directly under `notes`, in oldest-first order. The title contains only its ISO 8601 date or timestamp. Put substantive follow-ups at the same level and link to the prior record. Require `title`, `tags`, and `details`. Write field labels on their own bullets with values as children. Use the explicit Workflowy bullet format for every field and value. Only content inside `details` may use another format. Use one tag, link, or distinct item per child. The [record contract](assets/record-format.md) defines precision, optional fields, ordering, and the slice format.
 - Place one formal slice directly under `spec-kit` in code order. Use the formal code and short title. Put the verified date and documented epic in child fields. Use the [project outline template](assets/templates/project-outline.md).
-- Keep record and project names free of inline tags. Store hashtags as individual bullet values under `Tags`. For a named project, put its project-level tags in `info > Tags`. Record source dates and useful scope tags. The operator owns any timeline construction. Routine recording excludes timeline fields or tags, saved searches, views, and exports.
+- Keep record and project names free of inline tags. Store hashtags as individual bullet values under `tags`. For a named project, put its project-level tags in `info > tags`. Record source dates and useful scope tags. The operator owns any timeline construction. Routine recording excludes timeline fields or tags, saved searches, views, and exports.
 - Use [catalog guidance](assets/shared-catalogs.md) for **REFERENCE > Entities**, **Glossary**, and **Remote Data**. Look up identity first, sort by name, and use direct links for specific relationships. Use absolute external URLs and local evidence references sparingly.
 
 ## Backfill, repair, and verify
@@ -43,26 +44,28 @@ repo or folder under **AI Agent Workspace > PROJECTS**. Reuse its branch or
 insert it alphabetically. Read the applicable **STANDARDS** before governed work.
 
 Use normal bullets for candid discussion, drafts, decisions, and evidence.
-Never store work in Workflowy comments or comment drafts. Keep the latest
-supported state in `info`, with durable `Details` and primary project `Links`
-as individual values. Link to the exact canonical finding or evidence.
+Never store work in Workflowy comments or comment drafts. Give `info` exactly
+three direct children: `tags`, `links`, and `details`. Put purpose, current state,
+next actions, blockers, and supporting evidence under `details`.
+Use lowercase letters and underscores for reusable field names. Use inline
+code for exact technical literals. Link to the exact canonical finding or evidence.
 Git and the established tracker govern official progress where used.
 Otherwise use the project artifacts. The operator decides what is published.
 
 In `notes`, keep major sessions and substantive updates as a flat, oldest-first
 list. Use only the ISO 8601 date or timestamp as the title. Retain the finest
 supported precision and offset. Put the description, scope tags, and prose
-under `Title`, `Tags`, and `Details`. Use label-only field bullets with each
+under `title`, `tags`, and `details`. Use label-only field bullets with each
 value or link nested in its own bullet. Require the Workflowy bullet format
-for fields and values. Only the contents of `Details` may use other formats.
-Keep tags out of names and other fields. Use one hashtag per `Tags` value.
-Put any project-level tags in `info > Tags`. Link related updates. The operator
+for fields and values. Only the contents of `details` may use other formats.
+Keep tags out of names and other fields. Use one hashtag per `tags` value.
+Put any project-level tags in `info > tags`. Link related updates. The operator
 owns timeline construction. Agents record dates without creating timeline
 metadata, views, saved searches, or exports.
 
 For Spec Kit, use one direct `spec-kit` bullet per formal slice in code order.
-Use only its code and short title. Nest the verified date under `Date` and
-the documented epic under `Epic` when applicable. Use the skill for shared
+Use only its code and short title. Nest the verified date under `date` and
+the documented epic under `epic` when applicable. Use the skill for shared
 reference records, migration, and precise field rules.
 
 Desktop MCP requires a running, signed-in Workflowy app with Local MCP

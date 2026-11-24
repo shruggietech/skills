@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `workflowy` v1.3.0 standardizes reusable keys in lowercase with underscores and
+  limits project info to tags, links, and details. Adds example native inline code
+  through the Desktop MCP and updates the activation and record templates.
+
 ## [1.14.2] - 2026-11-24
 
 ### Fixed

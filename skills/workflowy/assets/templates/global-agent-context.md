@@ -10,12 +10,14 @@ record rules. The operator decides what is published.
 Write records as normal bullets. Never use comments or comment drafts for
 record storage. Put dated records directly under `notes`, oldest first,
 with only the most precise supported ISO 8601 date or timestamp as title.
-Use standalone `Title`, `Tags`, and `Details` labels and nest each value
+Use standalone `title`, `tags`, and `details` labels and nest each value
 under its field. Require the Workflowy bullet format for fields and values.
-Only the contents of `Details` may use other formats. Keep titles free of
-inline tags and use one hashtag per `Tags` value. Use `info` for project
-`Tags`, durable `Details`, and primary `Links`. Link related records and exact evidence with one link per
-bullet. The operator owns timeline construction. Record dates without
+Only the contents of `details` may use other formats. Keep titles free of
+inline tags and use one hashtag per `tags` value. Under `info`, use only
+`tags`, `links`, and `details` as direct children. Put all other project context
+under `details`. Use lowercase letters and underscores for reusable keys.
+Use inline code for exact technical literals. Link exact evidence one target
+per bullet. The operator owns timeline construction. Record dates without
 creating timeline metadata, views, searches, or exports.
 
 Desktop MCP requires a running, signed-in Workflowy app with Local MCP

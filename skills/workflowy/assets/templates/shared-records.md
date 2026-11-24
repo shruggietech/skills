@@ -1,41 +1,41 @@
 # Shared record templates
 
-Put each entry under the appropriate REFERENCE catalog. Use a clean preferred name and standalone fields with nested values. Give each native hashtag a separate bullet under `Tags`. Each link gets its own bullet.
+Put each entry under the appropriate REFERENCE catalog. Use a clean preferred name and standalone fields with nested values. Give each native hashtag a separate bullet under `tags`. Each link gets its own bullet.
 
 ```text
 - Glossary
   - WebVTT
-    - Tags
+    - tags
       - #subtitles
-    - Definition
+    - definition
       - Timed text-track format for cues synchronized to media.
-    - Aliases
+    - aliases
       - Web Video Text Tracks
-    - Source
+    - source
       - [W3C WebVTT specification]
 - Entities
   - Cueson
-    - Tags
+    - tags
       - #subtitles
-    - Type
+    - type
       - Software
-    - Role
+    - role
       - Subtitle interchange tool
-    - Summary
+    - summary
       - Reads, preserves, renders, and converts subtitle documents.
-    - Homepage
+    - homepage
       - https://cueson.io/
 - Remote Data
   - Cueson WebVTT format contract
-    - Tags
+    - tags
       - #subtitles
-    - Links
+    - links
       - https://cueson.io/docs/formats/webvtt/
-    - Use when
+    - use_when
       - Check which features the software preserves and renders.
-    - Type
+    - type
       - Technical documentation
-    - About
+    - about
       - [Cueson]
       - [WebVTT]
 ```
